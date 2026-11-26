@@ -1,5 +1,5 @@
 # Contexte.md — Gestion des espaces aériens en vol libre (XC)
-1. Vision, mission et objectif
+## Vision, mission et objectif
 
 Périmètre du projet :
 
