@@ -108,3 +108,7 @@ Les jeux d'essai locaux de `BRIEFING` sont organisés selon les sources utilisé
 ### Règle AZBA & Revue de Configuration Instrument (Écran 2)
 - L'Écran 2 s'appuie sur le fichier OpenAir du processus central de production (`Openair_eAIP`), les paramètres du plan de vol SOFIA-Briefing et la chaîne EA afin de produire des consignes rédigées et classées du départ à l'arrivée (plafond face à la LTA, distance/axe/activité sur les zones, vigilance sans radio).
 - **Vérification AZBA sur site dédié :** l'activation ou non des zones AZBA n'est ni simulée ni déduite localement par `BRIEFING`. Lorsqu'une AZBA est concernée, l'application signale sa présence et rappelle impérativement de consulter le **site web dédié AZBA** pour vérifier l'activation réelle du jour avant de régler ou valider l'instrument.
+
+### NOTAM de dernière minute (OpenAir ponctuel)
+- Permettre à l'utilisateur de créer rapidement un petit fichier OpenAir via un écran de saisie guidée respectant le format OpenAir afin d'intégrer un NOTAM récent non présent dans les sources habituelles.
+- `samples/Openair_Adhoc/` : exemples de fichiers OpenAir ponctuels (NOTAM de dernière minute créés via l'écran de saisie guidée).

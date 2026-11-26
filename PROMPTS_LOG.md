@@ -6,3 +6,4 @@
 - **Documents à aligner :** `SPEC.md` et `TESTS_UX.md`.     
 
 **NOTAM de dernière minute (OpenAir assisté) :** ajout de la possibilité pour l'utilisateur de créer un petit fichier OpenAir ponctuel via un écran/formulaire de saisie guidée afin de respecter la syntaxe OpenAir.
+Création du dossier `samples/Openair_Adhoc/` avec un exemple de fichier OpenAir ponctuel pour tester la saisie guidée des NOTAM de dernière minute.
