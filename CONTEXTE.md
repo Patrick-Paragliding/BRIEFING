@@ -1,9 +1,12 @@
 # Contexte.md — Gestion des espaces aériens en vol libre (XC)
 
-## 1. Vision et objectif
-* **Vision :** passer d'une logique centralisée (« tout faire au même endroit ») à une architecture **décentralisée et modulaire** des informations d'espaces aériens, où chaque domaine assume clairement son périmètre et sa responsabilité. Le dispositif est souvent plus pertinent qu'il n'y paraît, mais souffre parfois d'un défaut de communication ou de lisibilité sur le rôle de chacun.
-* **Objectif :** offrir au pilote de vol libre — en particulier en cross-country (XC) de plaine, **avec ou sans radio aéronautique** — une préparation claire, pragmatique et fiable : disposer d'un fond d'espace aérien exploitable sur l'instrument de vol (ex. XCTrack), le croiser avec **SOFIA-Briefing**, vérifier l'activation réelle sur le **site web dédié AZBA** (sans calcul automatique d'activation locale), s'appuyer sur les outils spécialisés pertinents et opérer une sélection/désélection ciblée des zones selon le vol et l'équipement radio.
-* **Rôle du document :** poser le cadre commun pour des bénévoles aux profils variés et préparer la conception ultérieure d'un **diagramme *one page*** synthétique, en articulation avec les autres documents du projet (`SPEC.md`, `TESTS_UX.md`, `PROMPTS_LOG.md`, `PROMPT_MAITRE.md`).
+1. Vision et objectif
+
+Vision : réduire la charge cognitive liée aux espaces aériens pour le pilote de vol libre (particulièrement en cross-country de plaine, avec ou sans radio aéronautique), en passant d'une logique centralisée (« tout faire au même endroit ») à une architecture décentralisée et modulaire où chaque domaine assume clairement son périmètre et sa responsabilité. Le dispositif est souvent plus pertinent qu'il n'y paraît, mais souffre parfois d'un défaut de communication ou de lisibilité sur le rôle de chacun.
+
+Objectif : produire un OpenAir de référence, fiable, traçable et à jour, afin que tout ce qui peut être préparé avant le vol soit déjà préparé : disposer d'un fond exploitable sur l'instrument de vol (ex. XCTrack), le croiser avec SOFIA-Briefing, vérifier l'activation réelle sur le site web dédié AZBA (sans calcul automatique d'activation locale), s'appuyer sur les outils spécialisés pertinents (comme SpotAiR synchronisé chaque nuit pour les ZSM avec DREAL Aquitaine et FFVL) et opérer une sélection/désélection ciblée des zones selon le vol et l'équipement radio.
+
+Rôle du document : poser le cadre commun pour des bénévoles aux profils variés et préparer la conception ultérieure d'un diagramme one page synthétique, en articulation avec les autres documents du projet (SPEC.md, TESTS_UX.md, PROMPTS_LOG.md, PROMPT_MAITRE.md).
 
 ---
 
