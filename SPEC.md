@@ -67,7 +67,7 @@ L'application applique strictement les 3 cas suivants :
 3. **NOTAM isolé** -> **Afficher le NOTAM**.
 
 ### 2.3 Distinction Visuelle & Cartographie Interactive
-* **Code couleur strict** : Différenciation visuelle nette entre **Warning (`W`)** et **Zone Restreinte (`R`)** (sur les cartes texte et les polygones cartographiques).
+&* **Code couleur strict** : Différenciation visuelle nette entre **Warning (`W`)** et **Zone Restreinte (`R`)** (sur les cartes texte et les polygones cartographiques).
 * **Tracé du parcours** : Affichage des aérodromes (départ, contournement, arrivée), du couloir et des demi-cercles.
 * **Curseur de rayon dynamique** : Slider permettant d'ajuster le rayon des restrictions représentées par un cercle ponctuel (**plage : démarre à 5 NM/km, défaut à 10**).
 * **Gestion des contours SUPAIP connus vs génériques** :
@@ -96,4 +96,15 @@ L'application applique strictement les 3 cas suivants :
 * *À 50 km* : « Attention Zone Restreinte — Pénétration autorisée sous condition de contact radio (rappel : vol sans radio -> contourner). »
 
 ### 3.3 Synchronisation Texte / Carte
-* Écran partagé (PC) ou bascule rapide (Mobile) : survoler ou cliquer sur une instruction met en surbrillance la zone correspondante sur la carte et centre la vue dessus.
+* Écran partagé (PC) ou bascule rapide (Mobile) : survoler ou cliquer sur une instruction met en surbrillance la zone correspondante sur la carte et centre la vue dessus.  
+
+### Jeux d'essai (`samples/`)
+Les jeux d'essai locaux de `BRIEFING` sont organisés selon les sources utilisées par l'application :
+- `samples/sofia_pdf/` : dossiers PDF SOFIA-Briefing types (parcours XC, SUP AIP avec/sans NOTAM Trigger, NOTAM isolés).
+- `samples/aerodromes/` : fichiers CSV de résolution des codes aérodromes (`LFXX`) vers leurs noms lisibles.
+- `samples/Openair_SUPAIP/` : fichiers OpenAir individuels de SUP AIP connus, utilisés pour afficher le contour détaillé d'une zone, proposer le masquage du cercle générique issu de SOFIA-Briefing et afficher sa description au clic.
+- `samples/Openair_eAIP/` : fichiers OpenAir issus du processus central de production, utilisés dans l'Écran 2 pour structurer et vérifier la configuration de l'instrument de vol.
+
+### Règle AZBA & Revue de Configuration Instrument (Écran 2)
+- L'Écran 2 s'appuie sur le fichier OpenAir du processus central de production (`Openair_eAIP`), les paramètres du plan de vol SOFIA-Briefing et la chaîne EA afin de produire des consignes rédigées et classées du départ à l'arrivée (plafond face à la LTA, distance/axe/activité sur les zones, vigilance sans radio).
+- **Vérification AZBA sur site dédié :** l'activation ou non des zones AZBA n'est ni simulée ni déduite localement par `BRIEFING`. Lorsqu'une AZBA est concernée, l'application signale sa présence et rappelle impérativement de consulter le **site web dédié AZBA** pour vérifier l'activation réelle du jour avant de régler ou valider l'instrument.
