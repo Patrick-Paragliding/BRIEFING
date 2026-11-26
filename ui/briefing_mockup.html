@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BRIEFING — Mock-up UX v4 (Écran 1, Écran 2 &amp; Zone Exceptionnelle)</title>
+  <style>
+    :root {
+      --bg-app: #f3f5f8;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f8fafc;
+      --border-color: #d8e0e8;
+      --text-primary: #16202a;
+      --text-secondary: #4d5d6d;
+      --text-muted: #728394;
+      --accent-blue: #1d5fa7;
+      --accent-blue-soft: #e8f1fb;
+      --zone-w-bg: #fff6e5;
+      --zone-w-border: #d9822b;
+      --zone-w-text: #8a4b08;
+      --zone-r-bg: #fdecec;
+      --zone-r-border: #c92a2a;
+      --zone-r-text: #8b1414;
+      --azba-bg: #fef9c3;
+      --azba-border: #ca8a04;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.06);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      background: var(--bg-app);
+      color: var(--text-primary);
+      line-height: 1.45;
+    }
+
+    .topbar {
+      background: #102033;
+      color: #ffffff;
+      padding: 12px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: #2b7de9;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.15;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: #b7c7d8;
+    }
+
+    .nav-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn {
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.08);
+      color: #e6eef7;
+      padding: 8px 13px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .tab-btn.active {
+      background: #2b7de9;
+      border-color: #2b7de9;
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-subtle);
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border: 1px solid var(--accent-blue);
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.94;
+    }
+
+    .disclaimer-bar {
+      background: #fffbeb;
+      border-bottom: 1px solid #f3d078;
+      color: #5c3d04;
+      padding: 8px 18px;
+      font-size: 12.5px;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 16px auto;
+      padding: 0 16px 32px;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 375px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 980px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .badge-w {
+      background: var(--zone-w-bg);
+      color: var(--zone-w-text);
+      border: 1px solid var(--zone-w-border);
+    }
+
+    .badge-r {
+      background: var(--zone-r-bg);
+      color: var(--zone-r-text);
+      border: 1px solid var(--zone-r-border);
+    }
+
+    .badge-info {
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue);
+    }
+
+    .toggle-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .toggle-pill {
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .toggle-pill.active {
+      background: var(--accent-blue-soft);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      font-size: 12.5px;
+    }
+
+    .meta-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+    }
+
+    .meta-label {
+      color: var(--text-muted);
+      font-size: 11px;
+      display: block;
+    }
+
+    .meta-val {
+      font-weight: 700;
+    }
+
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .item-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      background: #ffffff;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .item-card:hover,
+    .item-card.selected {
+      border-color: var(--accent-blue);
+      background: #f5f9ff;
+    }
+
+    .item-card.type-w {
+      border-left: 4px solid var(--zone-w-border);
+    }
+
+    .item-card.type-r {
+      border-left: 4px solid var(--zone-r-border);
+    }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .item-title {
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .item-desc {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .item-foot {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .map-stage {
+      position: relative;
+      background: #eef4ea;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      min-height: 430px;
+      overflow: hidden;
+    }
+
+    .map-toolbar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .map-chip {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-size: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    svg.map-svg {
+      width: 100%;
+      height: 430px;
+      display: block;
+    }
+
+    .popup-box {
+      margin-top: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 12.5px;
+    }
+
+    .whatsapp-box {
+      width: 100%;
+      min-height: 110px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+      background: var(--bg-subtle);
+      resize: vertical;
+    }
+
+    .alert-azba {
+      background: var(--azba-bg);
+      border: 1px solid var(--azba-border);
+      color: #563e00;
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 12.5px;
+      margin-bottom: 10px;
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(16, 24, 40, 0.55);
+      z-index: 60;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .modal-panel {
+      background: #ffffff;
+      border-radius: var(--radius-md);
+      max-width: 820px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 20px 45px rgba(16, 24, 40, 0.25);
+      margin-top: 20px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+
+    .modal-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .modal-tab {
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    .modal-tab.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+    }
+
+    .ux-checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12.5px;
+    }
+
+    .ux-check-item {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      background: var(--bg-subtle);
+    }
+
+    .ux-check-item label {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .ux-check-detail {
+      margin-top: 4px;
+      padding-left: 22px;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-grid label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .form-grid input,
+    .form-grid select {
+      padding: 6px 8px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+    }
+
+    pre.openair-preview {
+      background: #102033;
+      color: #e6eef7;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      overflow-x: auto;
+      margin: 8px 0 0;
+    }
+
+    .compliance-box {
+      margin-top: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+
+    .compliance-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .compliance-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .compliance-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chk-ok {
+      color: #15803d;
+      font-weight: 700;
+    }
+
+    .chk-warn {
+      color: #b45309;
+      font-weight: 700;
+    }
+
+    .placeholder-note {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: var(--bg-subtle);
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">PX</div>
+      <div>
+        <div class="brand-title">BRIEFING — Revue SOFIA &amp; Instrument</div>
+        <div class="brand-sub">Mock-up UX v4 • 100 % client-side • Parapente XC • J-1 / Jour J</div>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <button class="tab-btn active" data-screen="screen1" onclick="switchScreen('screen1')">
+        1. Briefing &amp; Carte SOFIA
+      </button>
+      <button class="tab-btn" data-screen="screen2" onclick="switchScreen('screen2')">
+        2. Revue Instrument (OpenAir)
+      </button>
+      <button class="tab-btn" data-screen="screen3" onclick="switchScreen('screen3')">
+        3. Zone Exceptionnelle
+      </button>
+      <button class="btn-secondary" onclick="openHelpModal('guide')">
+        Aide &amp; Tests UX
+      </button>
+    </div>
+  </header>
+
+  <div class="disclaimer-bar">
+    <strong>Avertissement réglementaire :</strong> Mock-up d'aide à la préparation et à la revue d'instrument. Ne remplace ni le dossier officiel SOFIA-Briefing, ni les publications officielles du SIA (eAIP, SUPAIP, NOTAM, AZBA), ni le jugement et la responsabilité du pilote en vol.
+  </div>
+
+  <main class="container">
+
+    <section id="screen1" class="screen active">
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-title">
+              <span>Dossiers SOFIA-Briefing (1 à N)</span>
+              <span class="badge badge-info" id="sofiaCountBadge">2 dossiers actifs</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-secondary); margin:0 0 8px;">
+              Sélectionnez un ou plusieurs dossiers SOFIA-Briefing (traçabilité par fichier source) :
+            </p>
+            <div class="toggle-row" id="sofiaFilesToggles"></div>
+            <div class="placeholder-note">
+              <strong>Emplacement futur :</strong> bouton de chargement de fichiers locaux (<code>.pdf</code> / <code>.csv</code> / <code>.openair</code>) à brancher lors de l'intégration.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Métadonnées du vol &amp; Aérodromes (CSV)</span></div>
+            <div class="meta-grid" id="flightMetaGrid"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Filtres de paragraphes</span></div>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-bottom:6px;">
+              Par défaut : <strong>Aérodrome</strong> et <strong>Restriction En-Route</strong> actifs.
+            </div>
+            <div class="toggle-row" id="paragraphToggles"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>Zones dédupliquées (SUPAIP / NOTAM)</span>
+              <span class="badge badge-info" id="dedupCountBadge">0 zone</span>
+            </div>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-bottom:8px;">
+              Règles : SUPAIP sans trigger → SUPAIP ; SUPAIP avec trigger → NOTAM seul ; NOTAM isolé → NOTAM.
+            </div>
+            <div class="item-list" id="dedupZoneList"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title">
+              <span>Cartographie du parcours &amp; Contours SUPAIP</span>
+              <span style="font-size:12px; font-weight:600; color:var(--text-secondary);">
+                Rayon cercle ponctuel : <strong id="radiusValueLabel">10</strong> NM/km
+              </span>
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; font-size:12.5px;">
+              <label style="display:flex; align-items:center; gap:8px; flex:1; min-width:210px;">
+                <span>Rayon (5 à 30) :</span>
+                <input id="radiusSlider" type="range" min="5" max="30" value="10" oninput="onRadiusChange(this.value)" style="flex:1;" />
+              </label>
+
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input id="hideGenericCircleCheckbox" type="checkbox" checked onchange="renderAll()" />
+                <span>Masquer le cercle générique SOFIA quand un contour SUPAIP connu existe</span>
+              </label>
+            </div>
+
+            <div class="map-stage">
+              <div class="map-toolbar">
+                <div class="map-chip">
+                  <span class="badge badge-w">W</span> Warning • <span class="badge badge-r">R</span> Zone Restreinte • Quadrilatères hors-route
+                </div>
+                <div class="map-chip" id="mapSelectionHint">
+                  Cliquez sur un polygone à 4 côtés ou une zone pour afficher sa description.
+                </div>
+              </div>
+
+              <svg id="screen1Svg" class="map-svg" viewBox="0 0 800 430" role="img" aria-label="Carte topographique du parcours SOFIA-Briefing">
+                <defs>
+                  <linearGradient id="bgTerrain1" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#f2f6ec" />
+                    <stop offset="55%" stop-color="#e8efe2" />
+                    <stop offset="100%" stop-color="#dfe8dc" />
+                  </linearGradient>
+                  <pattern id="gridPattern1" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(90,115,95,0.14)" stroke-width="1" />
+                  </pattern>
+                </defs>
+
+                <rect width="800" height="430" fill="url(#bgTerrain1)" />
+                <rect width="800" height="430" fill="url(#gridPattern1)" />
+                <path d="M 35 70 Q 120 45 195 85 Q 240 120 175 160 Q 95 170 40 130 Z" fill="#cde0c4" opacity="0.65" />
+                <path d="M 470 280 Q 570 250 675 285 Q 740 315 710 375 Q 590 395 490 355 Z" fill="#cde0c4" opacity="0.65" />
+                <path d="M 0 215 Q 190 190 360 255 T 800 295" fill="none" stroke="#8ec2e6" stroke-width="5" opacity="0.55" />
+                <path d="M 270 0 Q 310 110 295 220 T 340 430" fill="none" stroke="#8ec2e6" stroke-width="3.5" opacity="0.45" />
+                <ellipse cx="560" cy="120" rx="115" ry="58" fill="none" stroke="rgba(125,112,85,0.24)" stroke-width="1.2" stroke-dasharray="4,3" />
+                <ellipse cx="560" cy="120" rx="75" ry="36" fill="none" stroke="rgba(125,112,85,0.24)" stroke-width="1.2" stroke-dasharray="4,3" />
+                <path d="M 20 350 L 290 290 L 520 325 L 780 250" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.85" />
+                <path d="M 20 350 L 290 290 L 520 325 L 780 250" fill="none" stroke="#c8b99a" stroke-width="1.5" />
+                <path d="M 180 15 L 230 190 L 290 290 L 340 415" fill="none" stroke="#ffffff" stroke-width="3.5" opacity="0.8" />
+                <path d="M 180 15 L 230 190 L 290 290 L 340 415" fill="none" stroke="#c8b99a" stroke-width="1.2" />
+
+                <path d="M 110 315 L 395 135 L 685 195" fill="none" stroke="#1d5fa7" stroke-width="42" stroke-linecap="round" stroke-linejoin="round" opacity="0.11" />
+                <path d="M 110 315 L 395 135 L 685 195" fill="none" stroke="#1d5fa7" stroke-width="2.5" stroke-dasharray="6,6" />
+                <path d="M 110 270 A 45 45 0 0 0 110 360" fill="rgba(29,95,167,0.07)" stroke="#1d5fa7" stroke-width="1.5" />
+                <path d="M 685 150 A 45 45 0 0 1 685 240" fill="rgba(29,95,167,0.07)" stroke="#1d5fa7" stroke-width="1.5" />
+
+                <g id="screen1ZonesLayer"></g>
+
+                <g transform="translate(110,315)">
+                  <circle r="7" fill="#102033" />
+                  <text x="12" y="4" font-size="12" font-weight="700" fill="#102033">LFAT (Départ)</text>
+                </g>
+                <g transform="translate(395,135)">
+                  <circle r="6" fill="#1d5fa7" />
+                  <text x="10" y="-6" font-size="12" font-weight="700" fill="#1d5fa7">LFOQ (Virage)</text>
+                </g>
+                <g transform="translate(685,195)">
+                  <circle r="7" fill="#102033" />
+                  <text x="-78" y="-12" font-size="12" font-weight="700" fill="#102033">LFRK (Arrivée)</text>
+                </g>
+              </svg>
+            </div>
+
+            <div class="popup-box" id="screen1Popup">
+              <strong>Fiche zone :</strong> Sélectionnez un élément dans la liste ou sur la carte pour voir les détails, la source SOFIA et le contour SUPAIP.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Partage WhatsApp &amp; Archivage local PDF</span></div>
+            <textarea id="whatsappOutput" class="whatsapp-box" readonly></textarea>
+            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                <button class="btn-primary" onclick="copyWhatsApp()">Copier résumé WhatsApp</button>
+                <button class="btn-secondary" onclick="simulateArchivePdf()">Archiver PDF (PXA-BRIEFING-YYYYMMDD-NN.pdf)</button>
+              </div>
+              <span id="archiveStatus" style="font-size:12px; color:var(--text-secondary);"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen2" class="screen">
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-title">
+              <span>Filtres Revue Instrument</span>
+              <button class="btn-secondary" style="padding:4px 8px; font-size:11.5px;" onclick="resetScreen2Filters()">Réinitialiser</button>
+            </div>
+
+            <div style="margin-bottom:10px; font-size:12px;">
+              <span class="meta-label">Sources OpenAir &amp; couches</span>
+              <div class="toggle-row" id="openairSourceToggles"></div>
+            </div>
+
+            <div style="margin-bottom:10px; font-size:12px;">
+              <label for="dateRefInput" class="meta-label">Date de référence (fraîcheur / cohérence — hors calcul AZBA)</label>
+              <input id="dateRefInput" type="date" value="2026-11-26" onchange="renderScreen2()" style="width:100%; padding:6px 8px; border:1px solid var(--border-color); border-radius:var(--radius-sm);" />
+            </div>
+
+            <div style="font-size:12px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span class="meta-label" style="margin:0;">Repère altitude (calé sur plafond SOFIA-Briefing)</span>
+                <strong id="ceilingCapLabel">2 000 m (Plafond Briefing)</strong>
+              </div>
+              <input id="altViewSlider" type="range" min="500" max="3500" step="100" value="2000" oninput="onAltViewChange(this.value)" style="width:100%;" />
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                Plafond officiel issu du dossier SOFIA-Briefing : <strong>2 000 m</strong> (sert de référence pour la LTA et le repère d'altitude).
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-azba">
+            <strong>Règle AZBA (vérification manuelle obligatoire) :</strong> L'état d'activation d'une zone AZBA n'est ni simulé ni déduit localement. Vérifiez impérativement l'activité du jour sur le portail/site web dédié AZBA avant de valider votre instrument.
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>Instructions ordonnées (Départ → Arrivée)</span>
+              <span class="badge badge-info" id="instructionCountBadge">0 consigne</span>
+            </div>
+            <div class="item-list" id="instructionsList"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title">
+              <span>Visualisation OpenAir synchronisée</span>
+              <span style="font-size:12px; color:var(--text-secondary);">Sources : Openair_eAIP • Openair_SUPAIP • Openair_Adhoc</span>
+            </div>
+
+            <div class="map-stage">
+              <div class="map-toolbar">
+                <div class="map-chip">
+                  Plafond Briefing : <strong>2 000 m</strong> • Vol XC plaine (sans radio)
+                </div>
+                <div class="map-chip" id="screen2SyncStatus">
+                  Cliquez ou survolez une instruction pour centrer la zone OpenAir.
+                </div>
+              </div>
+
+              <svg id="screen2Svg" class="map-svg" viewBox="0 0 800 430" role="img" aria-label="Visualisation OpenAir sur fond topographique">
+                <defs>
+                  <linearGradient id="bgTerrain2" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#f2f6ec" />
+                    <stop offset="55%" stop-color="#e8efe2" />
+                    <stop offset="100%" stop-color="#dfe8dc" />
+                  </linearGradient>
+                  <pattern id="gridPattern2" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(90,115,95,0.14)" stroke-width="1" />
+                  </pattern>
+                </defs>
+
+                <rect width="800" height="430" fill="url(#bgTerrain2)" />
+                <rect width="800" height="430" fill="url(#gridPattern2)" />
+                <path d="M 55 75 Q 150 55 220 95 Q 250 135 180 165 Q 105 175 55 135 Z" fill="#cde0c4" opacity="0.65" />
+                <path d="M 480 285 Q 585 255 685 290 Q 745 320 715 380 Q 595 400 495 360 Z" fill="#cde0c4" opacity="0.65" />
+                <path d="M 0 220 Q 195 195 365 260 T 800 300" fill="none" stroke="#8ec2e6" stroke-width="5" opacity="0.55" />
+                <path d="M 20 355 L 295 295 L 525 330 L 780 255" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.85" />
+                <path d="M 20 355 L 295 295 L 525 330 L 780 255" fill="none" stroke="#c8b99a" stroke-width="1.5" />
+
+                <path d="M 110 315 L 395 135 L 685 195" fill="none" stroke="#1d5fa7" stroke-width="2.5" stroke-dasharray="6,6" />
+
+                <g id="screen2ZonesLayer"></g>
+
+                <g transform="translate(110,315)">
+                  <circle r="7" fill="#102033" />
+                  <text x="10" y="4" font-size="12" font-weight="700" fill="#102033">Départ</text>
+                </g>
+                <g transform="translate(685,195)">
+                  <circle r="7" fill="#102033" />
+                  <text x="-55" y="-10" font-size="12" font-weight="700" fill="#102033">Arrivée</text>
+                </g>
+              </svg>
+            </div>
+
+            <div class="popup-box" id="screen2DetailBox">
+              <strong>Détail espace aérien :</strong> Sélectionnez une instruction à gauche pour inspecter l'espace OpenAir associé.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>NOTAM de dernière minute — Saisie guidée (Openair_Adhoc)</span></div>
+            <div class="form-grid">
+              <label>
+                Nom / identifiant de zone
+                <input id="adhocName" type="text" value="NOTAM-ADHOC-01" />
+              </label>
+              <label>
+                Classe / Type OpenAir
+                <select id="adhocClass">
+                  <option value="R">R — Zone Restreinte</option>
+                  <option value="W">W — Warning / Activité</option>
+                </select>
+              </label>
+              <label>
+                Plafond / Plancher
+                <input id="adhocAlt" type="text" value="SFC to 4500FT AMSL" />
+              </label>
+              <label>
+                Distance / Axe depuis départ
+                <input id="adhocAxis" type="text" value="22 km — Axe NNE" />
+              </label>
+            </div>
+            <button class="btn-primary" onclick="addAdhocZone()">Ajouter au jeu Openair_Adhoc &amp; aperçu</button>
+            <div class="placeholder-note">
+              <strong>Emplacement futur :</strong> bouton de chargement d'un fichier <code>.openair</code> existant vers <code>samples/Openair_Adhoc/</code>.
+            </div>
+            <pre id="adhocPreview" class="openair-preview">* Fichier ponctuel Openair_Adhoc prêt à être généré
+AC R
+AN NOTAM-ADHOC-01
+AL SFC
+AH 4500FT AMSL</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen3" class="screen">
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-title">
+              <span>Définir une zone exceptionnelle</span>
+              <span class="badge badge-info">Openair_Adhoc</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-secondary); margin:0 0 10px;">
+              Saisie guidée pour intégrer un NOTAM de dernière minute ou une restriction ponctuelle absente des sources habituelles, avec génération d'un bloc OpenAir conforme.
+            </p>
+
+            <div class="form-grid">
+              <label>
+                Identifiant / Nom (AN)
+                <input id="excName" type="text" value="ZRT-EXCEPTION-01" />
+              </label>
+              <label>
+                Type / Classe OpenAir (AC)
+                <select id="excClass">
+                  <option value="R">R — Zone Restreinte</option>
+                  <option value="W">W — Warning / Activité</option>
+                  <option value="D">D — Zone Dangereuse</option>
+                </select>
+              </label>
+              <label>
+                Plancher (AL)
+                <input id="excFloor" type="text" value="SFC" />
+              </label>
+              <label>
+                Plafond (AH)
+                <input id="excCeiling" type="text" value="5500FT AMSL" />
+              </label>
+              <label>
+                Position / Axe sur le tracé
+                <input id="excAxis" type="text" value="28 km — Axe NO" />
+              </label>
+              <label>
+                Créneau / Validité indicative
+                <input id="excSchedule" type="text" value="09:00–17:00 UTC (à vérifier)" />
+              </label>
+              <label>
+                Fermeture géométrique du contour
+                <select id="excClosedPoly">
+                  <option value="closed">Polygone fermé (point final = point initial)</option>
+                  <option value="open">Contour ouvert (fermeture manquante)</option>
+                </select>
+              </label>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <label style="display:flex; flex-direction:column; gap:4px; font-size:12px; font-weight:600;">
+                <span>Observation / Consigne pilote (ex. vigilance vol sans radio)</span>
+                <input id="excNote" type="text" value="Vigilance vol sans radio : contourner si restriction active." style="padding:6px 8px; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-size:12.5px;" />
+              </label>
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <button class="btn-primary" onclick="saveExceptionalZone()">Enregistrer &amp; injecter dans la revue</button>
+              <button class="btn-secondary" onclick="downloadExceptionalOpenair()">Télécharger .openair</button>
+            </div>
+
+            <div class="placeholder-note">
+              <strong>Emplacement futur :</strong> import direct d'un fichier <code>.openair</code> ponctuel depuis <code>samples/Openair_Adhoc/</code>.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span>Aperçu du bloc OpenAir &amp; Conformité</span></div>
+            <pre id="excOpenairPreview" class="openair-preview">* Zone exceptionnelle Openair_Adhoc
+AC R
+AN ZRT-EXCEPTION-01
+AL SFC
+AH 5500FT AMSL</pre>
+            <div class="compliance-box" id="excComplianceBox">
+              <div class="compliance-title">
+                <span>Indicateur de conformité OpenAir</span>
+                <span class="badge badge-info" id="excComplianceBadge">Vérifié</span>
+              </div>
+              <ul class="compliance-list" id="excComplianceList"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title">
+              <span>Prévisualisation cartographique de la zone exceptionnelle</span>
+              <span class="badge badge-w">Hors-route • 4 côtés</span>
+            </div>
+
+            <div class="map-stage">
+              <div class="map-toolbar">
+                <div class="map-chip">
+                  Plafond Briefing : <strong>2 000 m</strong> • Aperçu quadrilatère hors-route
+                </div>
+                <div class="map-chip" id="screen3ZoneSummary">
+                  ZRT-EXCEPTION-01 (R) — SFC → 5500FT AMSL
+                </div>
+              </div>
+
+              <svg id="screen3Svg" class="map-svg" viewBox="0 0 800 430" role="img"

@@ -157,3 +157,24 @@ Les jeux d'essai locaux de `BRIEFING` sont organisés selon les sources utilisé
 * Permettre à l'utilisateur de créer rapidement un petit fichier OpenAir via un écran de saisie guidée respectant le format OpenAir afin d'intégrer un NOTAM récent non présent dans les sources habituelles.
 
 * `samples/Openair_Adhoc/` : exemples de fichiers OpenAir ponctuels (NOTAM de dernière minute créés via l'écran de saisie guidée).
+
+## Entrées de données & arborescence OpenAir
+
+Le projet **BRIEFING** s'appuie sur les couches et dossiers OpenAir suivants :
+- `samples/Openair_eAIP/` : espaces aériens de référence (eAIP).
+- `samples/Openair_SUPAIP/` : suppléments d'information aéronautique (SUP AIP).
+- `samples/Openair_Adhoc/` : fichiers OpenAir saisis ponctuellement (NOTAM temporaires ou contraintes locales non couvertes par les couches standards).
+
+## Interface utilisateur & cartographie (Mockup BRIEFING)
+
+- **Vue 3 volets** :
+  - **Gauche** : paramètres de vol (date, plafond visé en `FL` avec équivalence `FL × 30` en mètres), recherche et filtres par catégorie (`ZRT`, `SUP AIP`, `Parachutage`, `NOTAM`, `Adhoc`).
+  - **Centre** : vue cartographique avec **sélecteur de fond de carte** (`Sombre PXA`, `Carte OACI / VFR`, `IGN / Topographique`, `Relief / Plaine`) et adaptation automatique du contraste, complétée par un **profil vertical schématique** (`SFC` → `FL085`).
+  - **Droite** : indicateurs synthétiques, détail de la zone sélectionnée et bloc brut/OpenAir.
+- **Écran de saisie assistée OpenAir Adhoc** :
+  - Permet de saisir un NOTAM ponctuel (`AC`, `AN`, `AL`, `AH`, géométrie cercle `V X=` + `DC` ou polygone `DP`).
+  - Offre un aperçu OpenAir en temps réel, l'ajout immédiat au briefing actif et l'export d'un fichier texte OpenAir destiné à `samples/Openair_Adhoc/`.
+
+## Export
+
+- L'export du mockup BRIEFING produit un **fichier texte au format OpenAir** (`.txt` / `.openair`) contenant les blocs OpenAir des zones filtrées / actives (y compris les zones `ADHOC` créées pendant la session), et non un export JSON.
