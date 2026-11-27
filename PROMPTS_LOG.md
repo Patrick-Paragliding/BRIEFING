@@ -1,5 +1,18 @@
 ### Contexte à rappeler 
 
+
+### A SUIVRE 27/11/2026
+
+1. Entêtes des NOTAM + signet / accordéon pour le contenu : afficher d'abord une ligne d'entête synthétique par NOTAM, ouvrir le détail à la demande (signet / dépliage), et caler précisément ce qu'on met dans l'entête puis ce qu'on garde dans le contenu.
+2. Vrais chemins SIA (SUP AIP et AIRAC) : tu me donneras les URLs/chemins officiels exacts du SIA pour les SUP AIP et les AIRAC afin qu'on remplace toute hypothèse d'URL par les vrais liens.
+3. Tri des NOTAM affichés : mettre les NOTAM Rouge (R / restriction) en haut de la liste (et affiner les repères visuels).
+4. Bouton Sauvegarde + Copier le texte + WhatsApp : ajouter un bouton de sauvegarde locale en plus de la copie presse-papiers et du partage WhatsApp.   
+5. Lien SIA dans le résumé + validation du texte avec les utilisateurs : intégrer l'hyperlien vers le document SIA dans le résumé et valider la formulation finale avec les pilotes.
+6. Documentation MD
+Curseur de rayon maximal : SPEC.md et TESTS_UX.md mentionnent une plage démarrant à 5 avec défaut à 10, alors que l'Écran 1 actuel fixe le plancher minimal à 2 NM (avec valeur par défaut à 50 NM et curseur jusqu'à 200 NM).   État d'avancement réel : SPEC.md et TESTS_UX.md décrivent encore l'ensemble des fonctionnalités (multi-fichiers PDF, renommage PXA-BRIEFING-YYYYMMDD-NN.pdf, Écran 2 de revue instrument, saisie OpenAir Adhoc, export .txt/.openair) comme un cahier des charges cible, alors que le 1er checkpoint porte sur une première base fonctionnelle centrée sur l'Écran 1 et le rattachement PXA_OPENAIR (bySup / byNotam / geoms).   Structure des fichiers : SPEC.md évoque Core.js / Theme.css / samples/..., tandis que l'Écran 1 actuel embarque son style et s'appuie sur aerodromes-data.js, supaip-openair-data.js, sofia-core.js et sofia-map.js.   
+7. Créer la moulintte d'embarquement
+8. 2 HTML pour Mobile - PC + Penser au CSS pour mobile
+
 ### 2026-11-26 — Organisation de `samples/` (OpenAir) et règle AZBA (Écran 2)
 - **Décisions actées :**
   - Les contours SUP AIP connus (`Openair_SUPAIP/`) et la source de référence de l'Écran 2 (`Openair_eAIP/`) sont des fichiers OpenAir (`Openair_eAIP` provenant du processus central de production).
