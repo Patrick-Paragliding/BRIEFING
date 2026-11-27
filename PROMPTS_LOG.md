@@ -15,6 +15,11 @@ Curseur de rayon maximal : SPEC.md et TESTS_UX.md mentionnent une plage démarra
 9. le changement de couleur des cercles n'est pas actif
 10. Sélecteur d'entêtes en signet : placer l'outil de sélection des rubriques NOTAM dans un onglet/signet dédié (ou panneau latéral repliable) plutôt que dans la carte repliée au-dessus de la liste.
 11. 2e écran (Résumé Briefing / modale) : agrandir la fenêtre pour qu'elle occupe l'espace disponible et y intégrer l'aperçu visuel du PDF SOFIA (pdfPreviewCanvas) en plus du résumé texte.
+12. Exemple Sans point de contournement  ne fonctionne pas
+13. Pourquoi le SUPAIP 212/25 Apparait (certainement un problème de data sur Fichier EA PXA)
+14. Revoir supaip.fr le fichier SOFIA Briefing
+15. Verifier Résultat vs https://www.flyscope.fr/
+
 
 
 ### 2026-11-26 — Organisation de `samples/` (OpenAir) et règle AZBA (Écran 2)
