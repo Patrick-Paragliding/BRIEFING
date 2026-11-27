@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PXA — Briefing Espace Aérien (Mockup)</title>
+  <style>
+    :root {
+      --bg-main: #0e131a;
+      --bg-panel: #161e29;
+      --bg-card: #1d2736;
+      --bg-hover: #243144;
+      --border: #2c3a4f;
+      --text-primary: #e8eef6;
+      --text-secondary: #9fb0c7;
+      --text-muted: #6c7e96;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.14);
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --info: #a78bfa;
+      --radius: 10px;
+      --font-sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: Consolas, "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-main);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.45;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* En-tête */
+    header {
+      height: 56px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .brand-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .brand-sub {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    button {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    button:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent);
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #071019;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    button.primary:hover {
+      filter: brightness(1.08);
+    }
+
+    /* Grille principale */
+    .workspace {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 330px 1fr 370px;
+      min-height: 0;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .panel:last-child {
+      border-right: none;
+      border-left: 1px solid var(--border);
+    }
+
+    .panel-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .panel-header h2 {
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+    }
+
+    .panel-body {
+      padding: 12px 14px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* Formulaire / filtres gauche */
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 7px 10px;
+      border-radius: 7px;
+      font-size: 0.84rem;
+    }
+
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .chip {
+      font-size: 0.75rem;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .chip.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .event-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--warn);
+      border-radius: 8px;
+      padding: 10px;
+      cursor: pointer;
+      transition: transform 0.12s, background 0.12s;
+    }
+
+    .event-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .event-item.selected {
+      border-color: var(--accent);
+      background: var(--bg-hover);
+    }
+
+    .event-item.type-zrt { border-left-color: var(--danger); }
+    .event-item.type-supaip { border-left-color: var(--info); }
+    .event-item.type-para { border-left-color: var(--warn); }
+    .event-item.type-notam { border-left-color: var(--accent); }
+
+    .event-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .event-code {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-danger { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
+    .badge-warn { background: rgba(245, 158, 11, 0.18); color: #fcd34d; }
+    .badge-info { background: rgba(167, 139, 250, 0.18); color: #ddd6fe; }
+    .badge-accent { background: rgba(56, 189, 248, 0.18); color: #7dd3fc; }
+
+    .event-title {
+      font-size: 0.84rem;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .event-meta {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* Zone centrale : Carte Canvas + profil vertical */
+    .center-col {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: var(--bg-main);
+    }
+
+    .map-toolbar {
+      padding: 8px 14px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .canvas-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 240px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .legend {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(22, 30, 41, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.74rem;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      backdrop-filter: blur(4px);
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .profile-box {
+      height: 155px;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .profile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    /* Panneau droit : Détail & synthèse vol sans radio */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .kpi {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 10px;
+    }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+    }
+
+    .kpi-val {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+
+    .detail-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .detail-card h3 {
+      font-size: 0.92rem;
+      margin-bottom: 6px;
+    }
+
+    .detail-meta {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-family: var(--font-mono);
+    }
+
+    .detail-text {
+      font-size: 0.83rem;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .raw-box {
+      background: #0b0f15;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: #b7c7dc;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .checklist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+
+    .checklist li {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 7px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot-ok { color: var(--ok); font-weight: bold; }
+    .dot-warn { color: var(--warn); font-weight: bold; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="brand-badge">PXA // BRIEFING</span>
+      <div>
+        <div class="brand-title">Préparation Espace Aérien &amp; Zones Temporaires</div>
+        <div class="brand-sub">Mockup HTML standalone — SOFIA-Briefing · SUP AIP · NOTAM · OpenAir</div>
+      </div>
+    </div>
+    <div class="header-controls">
+      <span class="pill">Profil : <strong>XC Plaine · Sans radio</strong></span>
+      <span class="pill">Plafond visé : <strong>FL060 (1 800 m)</strong></span>
+      <button id="btn-import-mock">Charger jeu démo</button>
+      <button class="primary" id="btn-export-json">Exporter résumé JSON</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <!-- Colonne gauche : Paramètres de vol & filtres -->
+    <aside class="panel">
+      <div class="panel-header">
+        <h2>Paramètres &amp; Filtres</h2>
+        <span id="count-badge" class="pill">0 zones</span>
+      </div>
+      <div class="panel-body">
+        <div class="row-2">
+          <div class="field">
+            <label for="inp-date">Date du vol</label>
+            <input type="date" id="inp-date" value="2026-08-21" />
+          </div>
+          <div class="field">
+            <label for="inp-fl">Plafond max (FL)</label>
+            <select id="inp-fl">
+              <option value="45">FL045 (1 350 m)</option>
+              <option value="60" selected>FL060 (1 800 m)</option>
+              <option value="85">FL085 (2 550 m)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="inp-dep">Départ / Balise</label>
+            <input type="text" id="inp-dep" value="LFRK / Osmoy" />
+          </div>
+          <div class="field">
+            <label for="inp-search">Recherche</label>
+            <input type="text" id="inp-search" placeholder="ZRT, SUP AIP, LFOM..." />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Catégories actives</label>
+          <div class="filter-chips" id="chip-filters">
+            <span class="chip active" data-type="ALL">Tout</span>
+            <span class="chip active" data-type="ZRT">ZRT</span>
+            <span class="chip active" data-type="SUPAIP">SUP AIP</span>
+            <span class="chip active" data-type="PARA">Parachutage</span>
+            <span class="chip active" data-type="NOTAM">NOTAM</span>
+          </div>
+        </div>
+
+        <div class="event-list" id="event-list"></div>
+      </div>
+    </aside>
+
+    <!-- Colonne centrale : Carte schématique & tranches d'altitude -->
+    <section class="center-col">
+      <div class="map-toolbar">
+        <span>Vue schématique secteur &amp; route XC (clic sur une zone pour inspecter)</span>
+        <span id="coord-readout" style="font-family: var(--font-mono);">Lat 49.18°N · Lon 000.37°W</span>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="map-canvas"></canvas>
+        <div class="legend">
+          <div class="legend-row"><span class="swatch" style="background: rgba(239,68,68,0.45); border:1px solid #ef4444;"></span> ZRT / Zone réglementée temporaire</div>
+          <div class="legend-row"><span class="swatch" style="background: rgba(167,139,250,0.4); border:1px solid #a78bfa;"></span> SUP AIP (dossier détaillé SIA)</div>
+          <div class="legend-row"><span class="swatch" style="background: rgba(245,158,11,0.4); border:1px solid #f59e0b;"></span> Parachutage (cylindre 2 NM / ≈ 3,7 km)</div>
+          <div class="legend-row"><span class="swatch" style="background: #38bdf8;"></span> Trace / axe XC prévisionnel</div>
+        </div>
+      </div>
+      <div class="profile-box">
+        <div class="profile-header">
+          <span>Profil vertical schématique (SFC → FL085 · Rappel : FL × 30 ≈ mètres)</span>
+          <span id="profile-selected-label">Zone sélectionnée : —</span>
+        </div>
+        <canvas id="profile-canvas"></canvas>
+      </div>
+    </section>
+
+    <!-- Colonne droite : Détails de l'élément & contrôle sans radio -->
+    <aside class="panel">
+      <div class="panel-header">
+        <h2>Détail &amp; Contrôle Vol</h2>
+      </div>
+      <div class="panel-body">
+        <div class="summary-grid">
+          <div class="kpi">
+            <div class="kpi-label">Conflits route</div>
+            <div class="kpi-val" style="color: var(--danger);" id="kpi-conflicts">2</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">SUP AIP actifs</div>
+            <div class="kpi-val" style="color: var(--info);" id="kpi-supaip">1</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Zones parachutage</div>
+            <div class="kpi-val" style="color: var(--warn);" id="kpi-para">1</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Clairance radio</div>
+            <div class="kpi-val" style="color: var(--ok);">Non requis*</div>
+          </div>
+        </div>
+
+        <div class="detail-card" id="detail-card">
+          <h3 id="det-title">Sélectionnez une zone</h3>
+          <div class="detail-meta" id="det-meta"></div>
+          <div class="detail-text" id="det-desc"></div>
+          <div class="raw-box" id="det-raw"></div>
+        </div>
+
+        <div class="panel-header" style="padding: 8px 0; border: none;">
+          <h2>Points de vigilance (sans radio)</h2>
+        </div>
+        <ul class="checklist">
+          <li><span class="dot-ok">✓</span><span>Classes E et G accessibles en VFR sans radio ; éviter classes A, C, D sans clairance.</span></li>
+          <li><span class="dot-warn">!</span><span>Parachutage : cylindre par défaut de 2 NM (≈ 3,7 km) souvent trop haut pour passer au-dessus.</span></li>
+          <li><span class="dot-warn">!</span><span>Vérifier activation AZBA (matin / soir) et nomenclature SUP AIP complète (ex. <code>010/2025</code>).</span></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const MOCK_ZONES = [
+      {
+        id: "ZRT-NORD-04",
+        type: "ZRT",
+        badgeClass: "badge-danger",
+        typeLabel: "ZRT",
+        title: "ZRT Manœuvres & Tir Basse Altitude",
+        validity: "08:00–17:00 UTC · Actif",
+        altFloor: "SFC",
+        altCeil: "FL045 (1 350 m)",
+        x: 0.36, y: 0.34, r: 54,
+        desc: "Zone réglementée temporaire sur l'axe nord-est. Contournement obligatoire en vol sans radio lorsque la zone est active.",
+        raw: "ZRT NORD-04 SFC/FL045 ACTIF 0800-1700UTC. PENETRATION INTERDITE SANS CLAIRANCE ATC."
+      },
+      {
+        id: "SUPAIP-014/2026",
+        type: "SUPAIP",
+        badgeClass: "badge-info",
+        typeLabel: "SUP AIP",
+        title: "SUP AIP 014/2026 — Réorganisation espace temporaire",
+        validity: "15/08/2026 – 30/09/2026",
+        altFloor: "1 000 ft ASFC",
+        altCeil: "FL065 (1 950 m)",
+        x: 0.62, y: 0.46, r: 68,
+        desc: "Supplément d'information aéronautique détaillant une modification temporaire de structure avec cartes et créneaux d'activation.",
+        raw: "REF SUP AIP: 014/2026 | SOURCE: SIA | COUCHE OPENAIR ASSOCIEE: SUPAIP_2026_014.TXT"
+      },
+      {
+        id: "PARA-LFOM",
+        type: "PARA",
+        badgeClass: "badge-warn",
+        typeLabel: "Parachutage",
+        title: "Activité parachutage — Secteur LFOM",
+        validity: "HJ · Selon activité",
+        altFloor: "SFC",
+        altCeil: "FL120 (3 600 m)",
+        x: 0.48, y: 0.66, r: 36,
+        desc: "Cylindre de parachutage (rayon par défaut 2 NM ≈ 3,7 km). Plafond élevé généralement hors d'atteinte en parapente : contourner latéralement.",
+        raw: "DROP ZONE PARACHUTAGE | RAYON 2 NM (~3.7 KM) | HAUTEUR: FL120 | EVITER TRANSIT."
+      },
+      {
+        id: "NOTAM-A2418/26",
+        type: "NOTAM",
+        badgeClass: "badge-accent",
+        typeLabel: "NOTAM",
+        title: "NOTAM A2418/26 — Grue / Obstacle temporaire",
+        validity: "Valide jour du vol",
+        altFloor: "SFC",
+        altCeil: "180 m AMSL",
+        x: 0.27, y: 0.58, r: 22,
+        desc: "Alerte courte signalant un obstacle ponctuel ou un événement local à proximité de la transition.",
+        raw: "Q) LFFF/QOBCE/IV/NBO/AE/000/006/4911N00022W005 A) LFRK E) GRUE TEMPORAIRE HAUTEUR 180M AMSL."
+      }
+    ];
+
+    const state = {
+      selectedType: "ALL",
+      search: "",
+      selectedId: MOCK_ZONES[0].id
+    };
+
+    const eventListEl = document.getElementById("event-list");
+    const mapCanvas = document.getElementById("map-canvas");
+    const profileCanvas = document.getElementById("profile-canvas");
+
+    function getFilteredZones() {
+      return MOCK_ZONES.filter((z) => {
+        const matchesType = state.selectedType === "ALL" || z.type === state.selectedType;
+        const q = state.search.trim().toLowerCase();
+        const matchesQuery =
+          !q ||
+          z.id.toLowerCase().includes(q) ||
+          z.title.toLowerCase().includes(q) ||
+          z.desc.toLowerCase().includes(q);
+        return matchesType && matchesQuery;
+      });
+    }
+
+    function renderList() {
+      const list = getFilteredZones();
+      document.getElementById("count-badge").textContent = `${list.length} zone${list.length > 1 ? "s" : ""}`;
+      eventListEl.innerHTML = "";
+
+      if (!list.some((z) => z.id === state.selectedId) && list.length > 0) {
+        state.selectedId = list[0].id;
+      }
+
+      list.forEach((z) => {
+        const div = document.createElement("div");
+        div.className = `event-item type-${z.type.toLowerCase()} ${z.id === state.selectedId ? "selected" : ""}`;
+        div.innerHTML = `
+          <div class="event-top">
+            <span class="event-code">${z.id}</span>
+            <span class="badge ${z.badgeClass}">${z.typeLabel}</span>
+          </div>
+          <div class="event-title">${z.title}</div>
+          <div class="event-meta">
+            <span>${z.altFloor} → ${z.altCeil}</span>
+            <span>${z.validity}</span>
+          </div>
+        `;
+        div.addEventListener("click", () => {
+          state.selectedId = z.id;
+          renderAll();
+        });
+        eventListEl.appendChild(div);
+      });
+
+      renderDetail(list.find((z) => z.id === state.selectedId));
+    }
+
+    function renderDetail(zone) {
+      const titleEl = document.getElementById("det-title");
+      const metaEl = document.getElementById("det-meta");
+      const descEl = document.getElementById("det-desc");
+      const rawEl = document.getElementById("det-raw");
+      const profLabel = document.getElementById("profile-selected-label");
+
+      if (!zone) {
+        titleEl.textContent = "Aucune zone correspondante";
+        metaEl.textContent = "";
+        descEl.textContent = "Modifiez les filtres ou la recherche pour afficher des éléments.";
+        rawEl.textContent = "";
+        profLabel.textContent = "Zone sélectionnée : —";
+        return;
+      }
+
+      titleEl.textContent = zone.title;
+      metaEl.textContent = `${zone.id} · Tranche : ${zone.altFloor} → ${zone.altCeil} · ${zone.validity}`;
+      descEl.textContent = zone.desc;
+      rawEl.textContent = zone.raw;
+      profLabel.textContent = `Zone sélectionnée : ${zone.id} (${zone.altFloor} → ${zone.altCeil})`;
+    }
+
+    function zoneStyle(type) {
+      switch (type) {
+        case "ZRT": return { fill: "rgba(239, 68, 68, 0.24)", stroke: "#ef4444" };
+        case "SUPAIP": return { fill: "rgba(167, 139, 250, 0.22)", stroke: "#a78bfa" };
+        case "PARA": return { fill: "rgba(245, 158, 11, 0.24)", stroke: "#f59e0b" };
+        default: return { fill: "rgba(56, 189, 248, 0.22)", stroke: "#38bdf8" };
+      }
+    }
+
+    function renderMap() {
+      const rect = mapCanvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      mapCanvas.width = rect.width * dpr;
+      mapCanvas.height = rect.height * dpr;
+      const ctx = mapCanvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+
+      // Grille fond carte schématique
+      ctx.fillStyle = "#101722";
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.strokeStyle = "rgba(159, 176, 199, 0.08)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 48) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 0; y < h; y += 48) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+
+      // Axe de vol XC simulé
+      const pts = [
+        { x: w * 0.14, y: h * 0.76 },
+        { x: w * 0.34, y: h * 0.56 },
+        { x: w * 0.54, y: h * 0.42 },
+        { x: w * 0.84, y: h * 0.24 }
+      ];
+
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([7, 5]);
+      ctx.beginPath();
+      pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Points de route
+      pts.forEach((p, idx) => {
+        ctx.fillStyle = idx === 0 ? "#22c55e" : "#38bdf8";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Zones filtrées
+      const zones = getFilteredZones();
+      zones.forEach((z) => {
+        const cx = z.x * w;
+        const cy = z.y * h;
+        const st = zoneStyle(z.type);
+        const isSel = z.id === state.selectedId;
+
+        ctx.fillStyle = st.fill;
+        ctx.strokeStyle = isSel ? "#ffffff" : st.stroke;
+        ctx.lineWidth = isSel ? 2.5 : 1.6;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, z.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#e8eef6";
+        ctx.font = "600 11px Consolas, monospace";
+        ctx.fillText(z.id, cx - z.r + 6, cy - z.r - 6);
+      });
+    }
+
+    function renderProfile() {
+      const rect = profileCanvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const pw = rect.width - 28;
+      const ph = rect.height - 34;
+      profileCanvas.width = pw * dpr;
+      profileCanvas.height = ph * dpr;
+      const ctx = profileCanvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+
+      ctx.fillStyle = "#101722";
+      ctx.fillRect(0, 0, pw, ph);
+
+      // Lignes FL030, FL060, FL085
+      const levels = [
+        { label: "FL085 (2550m)", y: 14 },
+        { label: "FL060 (1800m)", y: ph * 0.42 },
+        { label: "FL030 (900m)", y: ph * 0.72 },
+        { label: "SFC", y: ph - 14 }
+      ];
+
+      ctx.font = "11px Consolas, monospace";
+      levels.forEach((lv) => {
+        ctx.strokeStyle = "rgba(159, 176, 199, 0.15)";
+        ctx.beginPath(); ctx.moveTo(95, lv.y); ctx.lineTo(pw - 12, lv.y); ctx.stroke();
+        ctx.fillStyle = "#9fb0c7";
+        ctx.fillText(lv.label, 8, lv.y + 4);
+      });
+
+      // Plafond XC visé
+      const flMax = Number(document.getElementById("inp-fl").value);
+      const targetY = flMax === 45 ? ph * 0.57 : flMax === 60 ? ph * 0.42 : 14;
+      ctx.strokeStyle = "#22c55e";
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(95, targetY); ctx.lineTo(pw - 12, targetY); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Bloc zone sélectionnée
+      const sel = MOCK_ZONES.find((z) => z.id === state.selectedId);
+      if (sel) {
+        const blockTop = sel.type === "PARA" ? 10 : sel.type === "NOTAM" ? ph - 26 : ph * 0.35;
+        const blockH = Math.max(14, (ph - 14) - blockTop);
+        const st = zoneStyle(sel.type);
+        ctx.fillStyle = st.fill;
+        ctx.strokeStyle = st.stroke;
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(150, blockTop, 220, blockH);
+        ctx.strokeRect(150, blockTop, 220, blockH);
+        ctx.fillStyle = "#e8eef6";
+        ctx.fillText(`${sel.id} : ${sel.altFloor} → ${sel.altCeil}`, 160, blockTop + 14);
+      }
+    }
+
+    function renderAll() {
+      renderList();
+      renderMap();
+      renderProfile();
+    }
+
+    // Interactions
+    mapCanvas.addEventListener("click", (e) => {
+      const rect = mapCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const hit = getFilteredZones().find((z) => {
+        const dx = z.x * rect.width - x;
+        const dy = z.y * rect.height - y;
+        return Math.hypot(dx, dy) <= z.r + 6;
+      });
+      if (hit) {
+        state.selectedId = hit.id;
+        renderAll();
+      }
+    });
+
+    mapCanvas.addEventListener("mousemove", (e) => {
+      const rect = mapCanvas.getBoundingClientRect();
+      const rx = (e.clientX - rect.left) / rect.width;
+      const ry = (e.clientY - rect.top) / rect.height;
+      const lat = (49.45 - ry * 0.65).toFixed(2);
+      const lon = (-0.75 + rx * 1.1).toFixed(2);
+      document.getElementById("coord-readout").textContent = `Lat ${lat}°N · Lon ${lon}°E`;
+    });
+
+    document.querySelectorAll("#chip-filters .chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const t = chip.dataset.type;
+        if (t === "ALL") {
+          const allActive = chip.classList.contains("active");
+          document.querySelectorAll("#chip-filters .chip").forEach((c) => {
+            c.classList.toggle("active", !allActive);
+          });
+          state.selectedType = !allActive ? "ALL" : "NONE";
+        } else {
+          chip.classList.toggle("active");
+          const activeTypes = Array.from(document.querySelectorAll("#chip-filters .chip[data-type]"))
+            .filter((c) => c.dataset.type !== "ALL" && c.classList.contains("active"))
+            .map((c) => c.dataset.type);
+          state.selectedType = activeTypes.length === 4 ? "ALL" : (activeTypes[0] || "NONE");
+        }
+        renderAll();
+      });
+    });
+
+    document.getElementById("inp-search").addEventListener("input", (e) => {
+      state.search = e.target.value;
+      renderAll();
+    });
+
+    document.getElementById("inp-fl").addEventListener("change", renderProfile);
+
+    document.getElementById("btn-import-mock").addEventListener("click", () => {
+      state.selectedType = "ALL";
+      state.search = "";
+      document.getElementById("inp-search").value = "";
+      document.querySelectorAll("#chip-filters .chip").forEach((c) => c.classList.add("active"));
+      state.selectedId = MOCK_ZONES[0].id;
+      renderAll();
+    });
+
+    document.getElementById("btn-export-json").addEventListener("click", () => {
+      const payload = {
+        date: document.getElementById("inp-date").value,
+        plafond_fl: Number(document.getElementById("inp-fl").value),
+        depart: document.getElementById("inp-dep").value,
+        zones: getFilteredZones()
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "pxa-briefing-mockup.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    window.addEventListener("resize", () => {
+      renderMap();
+      renderProfile();
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>

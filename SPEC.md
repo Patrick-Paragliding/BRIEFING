@@ -140,7 +140,7 @@ Les jeux d'essai locaux de `BRIEFING` sont organisés selon les sources utilisé
 
 * `samples/sofia_pdf/` : dossiers PDF SOFIA-Briefing types (parcours XC, SUP AIP avec/sans NOTAM Trigger, NOTAM isolés, cas multi-fichiers).
 
-* `samples/aerodromes/` : fichiers CSV de résolution des codes aérodromes (`LFXX`) vers leurs noms lisibles.
+* `samples/aerodromes/` : fichiers CSV de résolution des codes aérodromes (`LFXX`) vers leurs noms lisibles. 
 
 * `samples/Openair_SUPAIP/` : fichiers OpenAir individuels de SUP AIP connus, utilisés pour afficher le contour détaillé d'une zone, proposer le masquage du cercle générique issu de SOFIA-Briefing et afficher sa description au clic.
 

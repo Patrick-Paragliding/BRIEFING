@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>PXA — Visualiseur SOFIA Briefing</title>
+  <link rel="stylesheet" href="Theme.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --pxa-bg: #e2e8f0;
+      --pxa-surface: #ffffff;
+      --pxa-surface-alt: #f4f7fa;
+      --pxa-primary: #16324f;
+      --pxa-border: #cbd5e1;
+      --pxa-text: #0f172a;
+      --pxa-muted: #475569;
+    }
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--pxa-bg);
+      color: var(--pxa-text);
+    }
+    #map {
+      position: fixed;
+      inset: 0;
+      height: 100%;
+      width: 100%;
+      z-index: 1;
+      background: #cbd5e1;
+    }
+    .top-bar {
+      position: fixed; top: 10px; left: 52px; right: 14px; z-index: 1000;
+      background: rgba(255,255,255,0.97); padding: 8px 12px; border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: flex; flex-wrap: wrap;
+      gap: 10px; align-items: center; font-size: 12px; border: 1px solid var(--pxa-border);
+    }
+    .brand-badge { display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--pxa-primary); }
+    .brand-logo { height: 22px; width: auto; object-fit: contain; display: block; }
+    .control-group { display: flex; align-items: center; gap: 6px; border-left: 1px solid #ddd; padding-left: 8px; flex-wrap: wrap; }
+    .control-group:first-child { border-left: none; padding-left: 0; }
+    input[type="text"], input[type="number"], textarea.pxadel-comment {
+      font-size: 11.5px; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px;
+      font-family: inherit; color: #0f172a; background: #fff;
+    }
+
+    .top-right-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .help-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #283548;
+      color: #ffffff;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .help-btn:hover {
+      background: #16324f;
+    }
+
+    #help-modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(15, 23, 42, 0.55);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    #help-modal-backdrop.open {
+      display: flex;
+    }
+    #help-modal {
+      width: 620px;
+      max-width: 100%;
+      max-height: 85vh;
+      background: #ffffff;
+      color: #0f172a;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #help-modal-header {
+      background: var(--pxa-primary);
+      color: #ffffff;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #help-modal-close {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 2px 6px;
+    }
+    #help-modal-body {
+      padding: 14px 16px;
+      overflow-y: auto;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+    #help-modal-body h3 {
+      margin: 12px 0 6px 0;
+      font-size: 13px;
+      color: var(--pxa-primary);
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 3px;
+    }
+    #help-modal-body h3:first-child {
+      margin-top: 0;
+    }
+    #help-modal-body ul, #help-modal-body ol {
+      margin: 4px 0 8px 18px;
+      padding: 0;
+    }
+    #help-modal-body li {
+      margin-bottom: 4px;
+    }
+
+    #ad-found-box {
+      position: fixed; left: 52px; bottom: 14px; z-index: 1000;
+      background: rgba(255,255,255,0.96); border: 1px solid var(--pxa-border);
+      border-left: 4px solid var(--pxa-primary); border-radius: 8px;
+      padding: 8px 12px; font-size: 12px; color: var(--pxa-text);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18); max-width: 440px; line-height: 1.45;
+    }
+    .ad-row { margin: 2px 0; }
+    .ad-tag-ok { color: #15803d; font-weight: 700; }
+    .ad-tag-ko { color: #b91c1c; font-weight: 700; }
+
+    #sofia-window {
+      position: fixed; right: 14px; bottom: 14px; width: 440px; max-width: calc(100vw - 28px); max-height: 76vh;
+      z-index: 1000; background: var(--pxa-surface); border-radius: 10px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.25); display: flex; flex-direction: column;
+      overflow: hidden; border: 1px solid var(--pxa-border);
+    }
+    #sofia-header {
+      background: var(--pxa-primary); color: #fff; padding: 8px 12px; font-size: 13px;
+      font-weight: 600; display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; user-select: none; gap: 8px;
+    }
+    .window-title-wrap { display: flex; align-items: center; gap: 8px; }
+    .window-logo { height: 20px; width: auto; object-fit: contain; background: #fff; border-radius: 3px; padding: 1px; }
+    #sofia-body { padding: 10px; overflow-y: auto; font-size: 12px; color: var(--pxa-text); }
+    #sofia-window.collapsed #sofia-body { display: none; }
+
+    .section-box {
+      background: var(--pxa-surface-alt); border: 1px solid #dce3ea; border-radius: 7px;
+      padding: 8px; margin-bottom: 10px;
+    }
+    .section-title { font-weight: 700; color: var(--pxa-primary); margin-bottom: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .section-actions { display: flex; gap: 6px; font-size: 10.5px; }
+    .section-actions button { cursor: pointer; border: 1px solid #cbd5e1; background: #fff; color: #0f172a; border-radius: 4px; padding: 2px 7px; font-size: 10.5px; font-weight: 600; }
+    .btn-whatsapp { background: #25D366 !important; color: #062b14 !important; border-color: #16a34a !important; }
+
+    .pxadel-summary-box {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      padding: 8px;
+      font-size: 11.5px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 220px;
+      overflow-y: auto;
+      color: #0f172a;
+    }
+    .pxadel-summary-box a.supaip-link {
+      color: #0369a1;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+    textarea.pxadel-comment {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 44px;
+      resize: vertical;
+      margin-top: 4px;
+    }
+
+    .headers-checklist {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 8px;
+      max-height: 150px; overflow-y: auto; padding-right: 2px;
+    }
+    .header-check-item {
+      display: flex; align-items: flex-start; gap: 5px; font-size: 11px;
+      line-height: 1.25; cursor: pointer; background: #fff; padding: 3px 5px;
+      border-radius: 4px; border: 1px solid #e2e8f0;
+    }
+    .header-check-item input { margin-top: 1px; cursor: pointer; }
+
+    .params-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
+    }
+    .param-field { display: flex; flex-direction: column; gap: 2px; }
+    .param-field label { font-size: 10.5px; color: var(--pxa-muted); font-weight: 600; }
+    .param-field input {
+      width: 100%; box-sizing: border-box; background: #eef2f6;
+      color: #1e293b; border: 1px solid #cbd5e1; border-radius: 4px;
+    }
+    .param-field input[readonly] { cursor: default; }
+
+    .notam-item { border-left: 4px solid #d9534f; padding: 6px 8px; margin-bottom: 8px; background: #fafafa; border-radius: 0 4px 4px 0; }
+    .notam-item.status-cond { border-left-color: #f0ad4e; }
+    .notam-item.status-inactive { border-left-color: #adb5bd; opacity: 0.65; }
+    .notam-header { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .notam-id { font-weight: 700; color: var(--pxa-primary); }
+    .notam-section-tag { font-size: 10px; background: #e2e8f0; color: #1e293b; padding: 1px 5px; border-radius: 4px; margin-left: 4px; }
+    .badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; color: #fff; }
+    .badge-active { background: #d9534f; }
+    .badge-cond { background: #e67e22; }
+    .badge-inactive { background: #6c757d; }
+    .notam-dates { font-size: 11px; color: #555; margin-top: 2px; }
+    .notam-text { white-space: pre-line; color: #222; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="brand-badge">
+      <img src="Logo.png" alt="Logo PXA" class="brand-logo" onerror="this.style.display='none'" />
+      <span>PXA</span>
+    </div>
+
+    <div class="control-group">
+      <label><strong>PDF SOFIA :</strong> <input type="file" id="pdfInput" accept="application/pdf" /></label>
+      <label title="Charger le fichier CSV des aérodromes en secours (ouverture file://)"><strong>CSV AD :</strong> <input type="file" id="csvInput" accept=".csv,text/csv" /></label>
+    </div>
+
+    <div class="control-group">
+      <label>Rayon Q) max : <strong id="radiusVal">10</strong> NM
+        <input type="range" id="maxRadius" min="5" max="350" step="5" value="10" />
+      </label>
+      <label><input type="checkbox" id="onlyActive" checked /> Actifs / cond.</label>
+    </div>
+
+    <div class="top-right-actions">
+      <span id="status" style="color:var(--pxa-primary); font-weight:600;">Prêt</span>
+      <button type="button" id="openHelpBtn" class="help-btn" title="Afficher l'aide et le mode d'emploi">
+        <span>❓</span>
+        <span>Aide</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="help-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+    <div id="help-modal">
+      <div id="help-modal-header">
+        <span id="help-modal-title">❓ Aide — Visualiseur SOFIA Briefing (PXA)</span>
+        <button type="button" id="closeHelpBtn" aria-label="Fermer l'aide">×</button>
+      </div>
+      <div id="help-modal-body">
+        <h3>Description des fonctionnalités</h3>
+        <ul>
+          <li><strong>Cartographie, couloir &amp; rayons :</strong> trace l'axe Départ–Arrivée (résolu via <code>AerodromeFR.csv</code>), une bande latérale de demi-largeur <em>Demi-couloir</em> (NM) et deux demi-cercles de rayon <em>Rayon</em> (NM, avec repli sur <em>Demi-couloir</em> si non renseigné) autour des aérodromes, ainsi que les zones et points des NOTAM filtrés.</li>
+          <li><strong>Filtres dynamiques :</strong> permet de régler le rayon maximal <code>Q)</code> en NM et de filtrer les NOTAM inactifs vis-à-vis du créneau de vol.</li>
+          <li><strong>Résumé Briefing PXADEL :</strong> génère automatiquement un résumé prêt à être copié ou envoyé sur WhatsApp avec le nombre de NOTAM retenus, les statuts textuels, les liens officiels SIA vers les <code>SUP AIP</code> et un champ commentaire libre.</li>
+        </ul>
+
+        <h3>Comment utiliser l'application</h3>
+        <ol>
+          <li>Cliquez sur <strong>Choisir un fichier</strong> à côté de <em>PDF SOFIA</em> et sélectionnez votre briefing PDF exporté depuis SOFIA. Le fichier de référence <code>AerodromeFR.csv</code> est chargé automatiquement via serveur ; si vous ouvrez la page en fichier local (<code>file://</code>), utilisez le sélecteur <em>CSV AD</em> pour le charger.</li>
+          <li>Ajustez le curseur <strong>Rayon Q) max</strong> et la case <strong>Actifs / cond.</strong> selon vos critères d'analyse.</li>
+          <li>Consultez la carte (couloir et demi-cercles aux extrémités), les paramètres <em>PIB TRAJET</em> et la liste des NOTAM dans la fenêtre de droite (réductible via son bandeau).</li>
+          <li>Ajoutez un <strong>Commentaire</strong> si besoin, puis cliquez sur <strong>Copier</strong> ou <strong>WhatsApp</strong> pour diffuser le résumé <em>Briefing PXADEL</em>.</li>
+        </ol>
+
+        <h3>Statuts &amp; liens SUP AIP</h3>
+        <ul>
+          <li><strong>🔴 ACTIF :</strong> NOTAM actif sur la période et les horaires du vol.</li>
+          <li><strong>🟠 CONDITIONNEL :</strong> NOTAM soumis à créneau horaire <code>D)</code>, préavis ou activation.</li>
+          <li><strong>⚪ INACTIF :</strong> NOTAM hors créneau, futur ou expiré (masqué lorsque <em>Actifs / cond.</em> est coché).</li>
+          <li><strong>Liens SUP AIP :</strong> chaque mention <code>SUP AIP NNN/AA</code> pointe vers le document officiel du SIA (<code>sia.aviation-civile.gouv.fr</code>).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="ad-found-box">
+    <div style="font-weight:700; margin-bottom:3px;">Aérodromes</div>
+    <div id="ad-found-dep" class="ad-row">Départ : —</div>
+    <div id="ad-found-dest" class="ad-row">Arrivée : —</div>
+  </div>
+
+  <div id="sofia-window">
+    <div id="sofia-header" onclick="toggleWindow()">
+      <div class="window-title-wrap">
+        <img src="Logo.png" alt="Logo" class="window-logo" onerror="this.style.display='none'" />
+        <span>Fenêtre SOFIA — Paramètres &amp; NOTAM</span>
+      </div>
+      <span id="toggle-icon">−</span>
+    </div>
+    <div id="sofia-body">
+      <div class="section-box">
+        <div class="section-title">
+          <span>Résumé Briefing PXADEL</span>
+          <div class="section-actions">
+            <button type="button" id="copyPxadelBtn">Copier</button>
+            <button type="button" id="shareWhatsappBtn" class="btn-whatsapp">WhatsApp</button>
+          </div>
+        </div>
+        <div id="pxadelSummary" class="pxadel-summary-box">Chargez un PDF SOFIA Briefing pour générer le résumé PXADEL.</div>
+        <div class="param-field" style="margin-top:6px;">
+          <label for="pxadelComment">Commentaire</label>
+          <textarea id="pxadelComment" class="pxadel-comment" placeholder="Ajouter un commentaire..."></textarea>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">
+          <span>Entêtes / rubriques SOFIA (choix multiple)</span>
+          <div class="section-actions">
+            <button type="button" id="selectAllHeadersBtn">Tout</button>
+            <button type="button" id="clearAllHeadersBtn">Aucun</button>
+          </div>
+        </div>
+        <div id="headersChecklist" class="headers-checklist"></div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title"><span>Paramètres PIB TRAJET (Lecture)</span></div>
+        <div class="params-grid">
+          <div class="param-field">
+            <label for="pGenTime">Heure génération fichier</label>
+            <input type="text" id="pGenTime" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label for="pDepPlanned">Heure planifiée de départ</label>
+            <input type="text" id="pDepPlanned" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label for="pDur">Durée (HHMM)</label>
+            <input type="text" id="pDur" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label for="pRule">Règle de vol</label>
+            <input type="text" id="pRule" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label for="pDep">Départ (OACI)</label>
+            <input type="text" id="pDep" value="—" title="Code OACI de départ (modifiable si besoin)" />
+          </div>
+          <div class="param-field">
+            <label for="pDest">Destination (OACI)</label>
+            <input type="text" id="pDest" value="—" title="Code OACI de destination (modifiable si besoin)" />
+          </div>
+          <div class="param-field">
+            <label for="pFloor">Plancher (FL)</label>
+            <input type="text" id="pFloor" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label for="pCeil">Plafond sélectionné (FL)</label>
+            <input type="text" id="pCeil" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label for="pRadius">Rayon (NM)</label>
+            <input type="text" id="pRadius" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label for="pCorridor">Demi-couloir (NM)</label>
+            <input type="text" id="pCorridor" readonly value="—" />
+          </div>
+        </div>
+      </div>
+
+      <div id="notam-summary" style="margin-bottom:6px; font-weight:600; color:var(--pxa-primary);"></div>
+      <div id="notam-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const AERODROME_CSV_FILENAME = "AerodromeFR.csv";
+
+    const helpBackdrop = document.getElementById("help-modal-backdrop");
+    document.getElementById("openHelpBtn").addEventListener("click", () => {
+      helpBackdrop.classList.add("open");
+    });
+    document.getElementById("closeHelpBtn").addEventListener("click", () => {
+      helpBackdrop.classList.remove("open");
+    });
+    helpBackdrop.addEventListener("click", (e) => {
+      if (e.target === helpBackdrop) helpBackdrop.classList.remove("open");
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && helpBackdrop.classList.contains("open")) {
+        helpBackdrop.classList.remove("open");
+      }
+    });
+
+    window.addEventListener("error", (ev) => {
+      const st = document.getElementById("status");
+      if (st) st.textContent = "Erreur JS : " + (ev.message || "voir console");
+    });
+
+    if (typeof pdfjsLib !== "undefined" && pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+
+    const AERODROMES = {};
+    let csvLoadedCount = 0;
+    let csvFileName = "";
+
+    const KNOWN_SOFIA_HEADERS = [
+      "AÉRODROME DE DESTINATION",
+      "INSTALLATIONS ET SERVICES",
+      "ORGANISATION DE L'ESPACE AÉRIEN ET SERVICES DE LA CIRCULATION AÉRIENNE",
+      "EN-ROUTE",
+      "ORGANISATION DE L'ESPACE AÉRIEN ET PROCÉDURES",
+      "SERVICES DE LA CIRCULATION AÉRIENNE ET VOLMET",
+      "RESTRICTIONS DE L'ESPACE AÉRIEN",
+      "OBSTACLES",
+      "LFXX AD OU HEL SANS CODE OACI"
+    ];
+
+    let map = null;
+    let baseLayerGroup = null;
+    let routeLayer = null;
+    let notamLayer = null;
+    let currentNotams = [];
+    let availableHeaders = [...KNOWN_SOFIA_HEADERS];
+    let selectedHeaders = new Set(KNOWN_SOFIA_HEADERS);
+    let lastPxadelPlainText = "";
+
+    function initMapSafe() {
+      if (typeof L === "undefined") {
+        document.getElementById("status").textContent = "Leaflet non chargé (vérifier accès réseau)";
+        return;
+      }
+      map = L.map("map", { preferCanvas: true }).setView([48.2, -0.25], 8);
+      baseLayerGroup = L.layerGroup().addTo(map);
+      routeLayer = L.layerGroup().addTo(map);
+      notamLayer = L.layerGroup().addTo(map);
+
+      const ignLayer = L.tileLayer(
+        "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image%2Fpng&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",
+        { maxZoom: 19, attribution: "&copy; IGN Plan IGN v2" }
+      );
+      const osmFallback = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { maxZoom: 19, attribution: "&copy; OpenStreetMap" }
+      );
+
+      let tileErrors = 0;
+      ignLayer.on("tileerror", () => {
+        tileErrors++;
+        if (tileErrors >= 4 && !map.hasLayer(osmFallback)) {
+          baseLayerGroup.removeLayer(ignLayer);
+          osmFallback.addTo(baseLayerGroup);
+        }
+      });
+      ignLayer.addTo(baseLayerGroup);
+
+      setTimeout(() => map && map.invalidateSize(), 150);
+      window.addEventListener("resize", () => map && map.invalidateSize());
+    }
+
+    function renderHeadersChecklist() {
+      const container = document.getElementById("headersChecklist");
+      container.innerHTML = "";
+      availableHeaders.forEach((hdr) => {
+        const label = document.createElement("label");
+        label.className = "header-check-item";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = selectedHeaders.has(hdr);
+        cb.addEventListener("change", () => {
+          if (cb.checked) selectedHeaders.add(hdr);
+          else selectedHeaders.delete(hdr);
+          renderNotams();
+        });
+        const span = document.createElement("span");
+        span.textContent = hdr;
+        label.appendChild(cb);
+        label.appendChild(span);
+        container.appendChild(label);
+      });
+    }
+    renderHeadersChecklist();
+
+    document.getElementById("selectAllHeadersBtn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      selectedHeaders = new Set(availableHeaders);
+      renderHeadersChecklist();
+      renderNotams();
+    });
+
+    document.getElementById("clearAllHeadersBtn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      selectedHeaders.clear();
+      renderHeadersChecklist();
+      renderNotams();
+    });
+
+    function parseFlexibleCoord(raw, isLat) {
+      if (raw === undefined || raw === null) return null;
+      const s = String(raw).trim().replace(/\s+/g, "");
+      if (!s) return null;
+
+      const dmsMatch = s.match(/^(\d{2,3})(\d{2})(\d{2}(?:\.\d+)?)([NSEW])$/i);
+      if (dmsMatch) {
+        const deg = parseFloat(dmsMatch[1]) + parseFloat(dmsMatch[2]) / 60 + parseFloat(dmsMatch[3]) / 3600;
+        const hemi = dmsMatch[4].toUpperCase();
+        return (hemi === "S" || hemi === "W") ? -deg : deg;
+      }
+
+      const dmsSep = s.match(/^(\d{1,3})[:°](\d{1,2})[:'](\d{1,2}(?:\.\d+)?)["]?([NSEW])$/i);
+      if (dmsSep) {
+        const deg = parseFloat(dmsSep[1]) + parseFloat(dmsSep[2]) / 60 + parseFloat(dmsSep[3]) / 3600;
+        const hemi = dmsSep[4].toUpperCase();
+        return (hemi === "S" || hemi === "W") ? -deg : deg;
+      }
+
+      const num = parseFloat(s.replace(",", "."));
+      if (Number.isNaN(num)) return null;
+      if (isLat && (num < -90 || num > 90)) return null;
+      if (!isLat && (num < -180 || num > 180)) return null;
+      return num;
+    }
+
+    function loadAerodromesFromCsv(text, sourceName = AERODROME_CSV_FILENAME) {
+      csvFileName = sourceName;
+      const cleanText = text.replace(/^\uFEFF/, "");
+      const lines = cleanText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (!lines.length) return 0;
+
+      const sep = lines[0].includes(";") ? ";" : (lines[0].includes("\t") ? "\t" : ",");
+      const splitLine = (line) => line.split(sep).map(c => c.replace(/^"|"$/g, "").trim());
+
+      const firstCols = splitLine(lines[0]).map(h => h.toLowerCase());
+      const hasHeader = firstCols.some(h =>
+        ["icao", "oaci", "code", "ident", "ad", "lat", "latitude", "lon", "lng", "longitude", "nom", "name"].some(k => h.includes(k))
+      );
+
+      let idxCode = 0, idxName = 1, idxLat = 2, idxLon = 3, startRow = 0;
+
+      if (hasHeader) {
+        startRow = 1;
+        const findIdx = (candidates, fallback) => {
+          const found = firstCols.findIndex(h => candidates.some(c => h === c || h.includes(c)));
+          return found >= 0 ? found : fallback;
+        };
+        idxCode = findIdx(["oaci", "icao", "ident", "code_ad", "code", "ad"], 0);
+        idxName = findIdx(["nom", "name", "libelle", "libellé", "city", "ville"], 1);
+        idxLat  = findIdx(["lat", "latitude", "y"], 2);
+        idxLon  = findIdx(["lon", "lng", "longitude", "x"], 3);
+      }
+
+      let count = 0;
+      for (let i = startRow; i < lines.length; i++) {
+        const cols = splitLine(lines[i]);
+        let code = (cols[idxCode] || "").toUpperCase();
+        if (!/^[A-Z]{2}[A-Z0-9]{2}$/.test(code)) {
+          const foundCode = cols.find(c => /^[A-Z]{2}[A-Z0-9]{2}$/i.test(c.trim()));
+          if (foundCode) code = foundCode.trim().toUpperCase();
+        }
+        if (!/^[A-Z]{2}[A-Z0-9]{2}$/.test(code)) continue;
+
+        let lat = parseFlexibleCoord(cols[idxLat], true);
+        let lon = parseFlexibleCoord(cols[idxLon], false);
+
+        if (lat === null || lon === null) {
+          const parsedLats = [];
+          const parsedLons = [];
+          for (let cIdx = 0; cIdx < cols.length; cIdx++) {
+            if (cIdx === idxCode) continue;
+            const pLat = parseFlexibleCoord(cols[cIdx], true);
+            const pLon = parseFlexibleCoord(cols[cIdx], false);
+            if (pLat !== null && Math.abs(pLat) >= 35 && Math.abs(pLat) <= 55) parsedLats.push(pLat);
+            if (pLon !== null && Math.abs(pLon) >= -10 && Math.abs(pLon) <= 15) parsedLons.push(pLon);
+          }
+          if (lat === null && parsedLats.length) lat = parsedLats[0];
+          if (lon === null && parsedLons.length) lon = parsedLons[0];
+        }
+
+        if (lat !== null && lon !== null && Math.abs(lat) < 15 && Math.abs(lon) > 20) {
+          const tmp = lat; lat = lon; lon = tmp;
+        }
+
+        if (lat === null || lon === null) continue;
+
+        let name = cols[idxName] || "";
+        if (!name || /^[A-Z]{2}[A-Z0-9]{2}$/i.test(name) || parseFlexibleCoord(name, true) !== null) {
+          const textCol = cols.find((c, idx) =>
+            idx !== idxCode && c && !/^[+-]?\d+([.,]\d+)?$/.test(c) && parseFlexibleCoord(c, true) === null
+          );
+          name = textCol || code;
+        }
+
+        AERODROMES[code] = {
+          name,
+          lat,
+          lon
+        };
+        count++;
+      }
+
+      csvLoadedCount = Object.keys(AERODROMES).length;
+      return count;
+    }
+
+    document.getElementById("csvInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const nb = loadAerodromesFromCsv(text, file.name);
+      renderRoute(true);
+      updatePxadelSummary();
+      document.getElementById("status").textContent = nb > 0
+        ? `${nb} AD chargés (${file.name})`
+        : `0 AD exploitable dans ${file.name}`;
+    });
+
+    async function autoLoadAerodromeFrCsv() {
+      if (window.location.protocol !== "file:") {
+        try {
+          const resp = await fetch(AERODROME_CSV_FILENAME, { cache: "no-store" });
+          if (resp.ok) {
+            const text = await resp.text();
+            loadAerodromesFromCsv(text, AERODROME_CSV_FILENAME);
+          }
+        } catch (err) {}
+      }
+      renderRoute(true);
+      updatePxadelSummary();
+    }
+
+    function updateFoundAerodromesBox() {
+      const depCode = document.getElementById("pDep").value.trim().toUpperCase();
+      const destCode = document.getElementById("pDest").value.trim().toUpperCase();
+      const adDep = depCode && depCode !== "—" ? AERODROMES[depCode] : null;
+      const adDest = destCode && destCode !== "—" ? AERODROMES[destCode] : null;
+
+      const missingHint = csvLoadedCount === 0
+        ? (csvFileName
+            ? ` (0 AD reconnu dans ${csvFileName})`
+            : ` (${AERODROME_CSV_FILENAME} non chargé — utilisez CSV AD)`)
+        : ` dans ${AERODROME_CSV_FILENAME}`;
+
+      document.getElementById("ad-found-dep").innerHTML = !depCode || depCode === "—"
+        ? `Départ : —`
+        : adDep
+          ? `Départ <strong>${depCode}</strong> : <span class="ad-tag-ok">${adDep.name}</span> (${adDep.lat.toFixed(4)}, ${adDep.lon.toFixed(4)})`
+          : `Départ <strong>${depCode}</strong> : <span class="ad-tag-ko">Non trouvé${missingHint}</span>`;
+
+      document.getElementById("ad-found-dest").innerHTML = !destCode || destCode === "—"
+        ? `Arrivée : —`
+        : adDest
+          ? `Arrivée <strong>${destCode}</strong> : <span class="ad-tag-ok">${adDest.name}</span> (${adDest.lat.toFixed(4)}, ${adDest.lon.toFixed(4)})`
+          : `Arrivée <strong>${destCode}</strong> : <span class="ad-tag-ko">Non trouvé${missingHint}</span>`;
+    }
+
+    function toggleWindow() {
+      const win = document.getElementById("sofia-window");
+      win.classList.toggle("collapsed");
+      document.getElementById("toggle-icon").textContent = win.classList.contains("collapsed") ? "+" : "−";
+      if (map) setTimeout(() => map.invalidateSize(), 120);
+    }
+
+    function parseLat(str) {
+      const m = str.match(/^(\d{2})(\d{2})(\d{2}(?:\.\d+)?)?([NS])$/);
+      if (!m) return null;
+      const deg = +m[1] + +m[2] / 60 + (+(m[3] || 0)) / 3600;
+      return m[4] === "S" ? -deg : deg;
+    }
+    function parseLon(str) {
+      const m = str.match(/^(\d{3})(\d{2})(\d{2}(?:\.\d+)?)?([EW])$/);
+      if (!m) return null;
+      const deg = +m[1] + +m[2] / 60 + (+(m[3] || 0)) / 3600;
+      return m[4] === "W" ? -deg : deg;
+    }
+    function parseSofiaDate(str) {
+      if (!str) return null;
+      const clean = str.trim();
+      if (clean === "PERM") return Date.UTC(2099, 11, 31, 23, 59);
+      const m = clean.match(/(\d{2})\s+(\d{2})\s+(\d{4})\s+(\d{2}):(\d{2})/);
+      if (!m) return null;
+      return Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]);
+    }
+    function parseHeaderDate(str) {
+      if (!str || str === "—") return null;
+      const m = str.match(/(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})/);
+      if (!m) return null;
+      return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]));
+    }
+
+    function formatLocalDate(dateObj) {
+      if (!dateObj) return "—";
+      return new Intl.DateTimeFormat("fr-FR", {
+        timeZone: "Europe/Paris",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }).format(dateObj);
+    }
+
+    function formatLocalHour(dateObj) {
+      if (!dateObj) return "—";
+      const parts = new Intl.DateTimeFormat("fr-FR", {
+        timeZone: "Europe/Paris",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).formatToParts(dateObj);
+      const hh = parts.find(p => p.type === "hour")?.value || "00";
+      const mm = parts.find(p => p.type === "minute")?.value || "00";
+      return mm === "00" ? `${parseInt(hh, 10)}` : `${hh}h${mm}`;
+    }
+
+    function formatLocalDateTime(dateObj) {
+      if (!dateObj) return "—";
+      const d = formatLocalDate(dateObj);
+      const parts = new Intl.DateTimeFormat("fr-FR", {
+        timeZone: "Europe/Paris",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).formatToParts(dateObj);
+      const hh = parts.find(p => p.type === "hour")?.value || "00";
+      const mm = parts.find(p => p.type === "minute")?.value || "00";
+      return `${d} à ${hh}h${mm}`;
+    }
+
+    function formatDurationHours(durRaw) {
+      const m = (durRaw || "").trim().match(/^(\d{2})(\d{2})$/);
+      if (!m) return "—";
+      const h = parseInt(m[1], 10);
+      const min = parseInt(m[2], 10);
+      return min === 0 ? `${h}` : `${h}h${String(min).padStart(2, "0")}`;
+    }
+
+    function buildSupaipOfficialUrl(numStr, yearStr) {
+      const numPadded = String(numStr).padStart(3, "0");
+      const fullYear = yearStr.length === 2 ? `20${yearStr}` : yearStr;
+      return `https://www.sia.aviation-civile.gouv.fr/media/store/documents/file/l/f/lf_sup_${fullYear}_${numPadded}_fr.pdf`;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function injectSupaipLinksHtml(rawText) {
+      return escapeHtml(rawText).replace(/\bSUP\s*AIP\s*(\d{1,3})\s*\/\s*(\d{2,4})\b/gi, (match, num, yr) => {
+        const url = buildSupaipOfficialUrl(num, yr);
+        return `<a class="supaip-link" href="${url}" target="_blank" rel="noopener noreferrer" title="${url}">${match}</a>`;
+      });
+    }
+
+    function injectSupaipLinksPlain(rawText) {
+      return rawText.replace(/\bSUP\s*AIP\s*(\d{1,3})\s*\/\s*(\d{2,4})\b/gi, (match, num, yr) => {
+        const url = buildSupaipOfficialUrl(num, yr);
+        return `${match} (${url})`;
+      });
+    }
+
+    function getFlightWindowMs() {
+      const depDate = parseHeaderDate(document.getElementById("pDepPlanned").value.trim());
+      if (!depDate) return { startMs: null, endMs: null };
+      const durRaw = (document.getElementById("pDur").value.trim().match(/^\d{4}$/) || ["0400"])[0];
+      const durMins = parseInt(durRaw.slice(0, 2), 10) * 60 + parseInt(durRaw.slice(2, 4), 10);
+      return { startMs: depDate.getTime(), endMs: depDate.getTime() + durMins * 60000 };
+    }
+
+    function evaluateNotamValidity(notam, flightStartMs, flightEndMs) {
+      if (!flightStartMs || !flightEndMs) return { status: "active", label: "À VÉRIFIER" };
+      if (notam.validFrom && flightEndMs < notam.validFrom) return { status: "inactive", label: "FUTUR" };
+      if (notam.validTo && flightStartMs > notam.validTo) return { status: "inactive", label: "EXPIRÉ" };
+      if (notam.dSchedule) {
+        const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+        const flightDay = dayNames[new Date(flightStartMs).getUTCDay()];
+        const dayRange = notam.dSchedule.match(/\b(MON|TUE|WED|THU|FRI|SAT|SUN)-(MON|TUE|WED|THU|FRI|SAT|SUN)\b/);
+        if (dayRange) {
+          const idxStart = dayNames.indexOf(dayRange[1]);
+          const idxEnd = dayNames.indexOf(dayRange[2]);
+          const idxCur = dayNames.indexOf(flightDay);
+          const inDay = idxStart <= idxEnd ? (idxCur >= idxStart && idxCur <= idxEnd) : (idxCur >= idxStart || idxCur <= idxEnd);
+          if (!inDay) return { status: "inactive", label: "HORS JOUR D)" };
+        }
+        const timeRange = notam.dSchedule.match(/\b(\d{2})(\d{2})-(\d{2})(\d{2})\b/);
+        if (timeRange) {
+          const d = new Date(flightStartMs);
+          const dStart = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), +timeRange[1], +timeRange[2]);
+          const dEnd = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), +timeRange[3], +timeRange[4]);
+          if (flightEndMs < dStart || flightStartMs > dEnd) {
+            return { status: "inactive", label: `HORS CRÉNEAU (${notam.dSchedule})` };
+          }
+          return { status: "cond", label: `ACTIF SUR CRÉNEAU (${notam.dSchedule})` };
+        }
+        return { status: "cond", label: `HORAIRES D) : ${notam.dSchedule}` };
+      }
+      if (/ACTIVABLE PAR NOTAM|SUR DEMANDE UNIQUEMENT/i.test(notam.eText)) {
+        return { status: "cond", label: "SUR PRÉAVIS / DEMANDE" };
+      }
+      return { status: "active", label: "ACTIF" };
+    }
+
+    function formatNotamStatusTag(validity) {
+      if (validity.status === "active") return `🔴 ${validity.label}`;
+      if (validity.status === "cond") return `🟠 ${validity.label}`;
+      return `⚪ ${validity.label}`;
+    }
+
+    function updatePxadelSummary() {
+      const boxEl = document.getElementById("pxadelSummary");
+      const depUtcStr = document.getElementById("pDepPlanned").value.trim();
+      const genUtcStr = document.getElementById("pGenTime").value.trim();
+      const durRaw = document.getElementById("pDur").value.trim();
+      const depCode = document.getElementById("pDep").value.trim().toUpperCase();
+      const destCode = document.getElementById("pDest").value.trim().toUpperCase();
+      const halfCorridor = parseFloat(document.getElementById("pCorridor").value);
+      const ceilFl = parseInt(document.getElementById("pCeil").value, 10);
+      const maxRadius = parseInt(document.getElementById("maxRadius").value, 10);
+      const onlyActive = document.getElementById("onlyActive").checked;
+      const comment = document.getElementById("pxadelComment").value.trim();
+
+      const depDate = parseHeaderDate(depUtcStr);
+      const genDate = parseHeaderDate(genUtcStr);
+
+      const dateStr = formatLocalDate(depDate);
+      const startHourStr = formatLocalHour(depDate);
+      const durationStr = formatDurationHours(durRaw);
+
+      const depNom = depCode && depCode !== "—"
+        ? (AERODROMES[depCode] ? `${AERODROMES[depCode].name} (${depCode})` : depCode)
+        : "—";
+      const destNom = destCode && destCode !== "—"
+        ? (AERODROMES[destCode] ? `${AERODROMES[destCode].name} (${destCode})` : destCode)
+        : "—";
+      const corridorMnStr = !Number.isNaN(halfCorridor) ? `${halfCorridor * 2}` : "—";
+
+      let ceilingStr = "— Ft (soit — mètres)";
+      if (!Number.isNaN(ceilFl)) {
+        const feet = ceilFl * 100;
+        const meters = Math.round(feet * 0.3048);
+        ceilingStr = `${feet} Ft (soit ${meters} mètres)`;
+      }
+
+      const { startMs, endMs } = getFlightWindowMs();
+      const restrictions = currentNotams.filter((n) => {
+        const secNorm = (n.section || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+        if (!secNorm.includes("RESTRICTIONS DE L'ESPACE AERIEN")) return false;
+        if (onlyActive && evaluateNotamValidity(n, startMs, endMs).status === "inactive") return false;
+        if (n.qRadiusNm && n.qRadiusNm > maxRadius) return false;
+        return true;
+      });
+
+      const restrictionsText = restrictions.length
+        ? restrictions
+            .map((n) => {
+              const val = evaluateNotamValidity(n, startMs, endMs);
+              const tag = formatNotamStatusTag(val);
+              const radiusPart = n.qRadiusNm ? ` · ${n.qRadiusNm} NM` : "";
+              const datesPart = (n.validFromStr || n.validToStr)
+                ? ` (DU ${n.validFromStr} AU ${n.validToStr})`
+                : "";
+              const cleanBody = n.eText.replace(/\s+/g, " ").trim();
+              return `- [${tag}] ${n.id}${radiusPart}${datesPart} : ${cleanBody}`;
+            })
+            .join("\n\n")
+        : "Aucune restriction d'espace aérien active.";
+
+      const genLocalStr = formatLocalDateTime(genDate);
+
+      const headPart =
+        `Briefing PXADEL\n` +
+        `Pour la Journée du ${dateStr} à partir de ${startHourStr} heures pour ${durationStr} heures sur l’axe ${depNom} – ${destNom} avec un couloir de ${corridorMnStr} MN et un plafond ${ceilingStr}\n\n` +
+        `Nombre de NOTAM Restrictions Espaces Aériens : ${restrictions.length}\n\n`;
+
+      const footPart =
+        `\n\nLe fichier SOFIA Briefing a été généré à ${genLocalStr} (heure locale).` +
+        (comment ? `\n\nCommentaire : ${comment}` : "");
+
+      boxEl.innerHTML =
+        escapeHtml(headPart) +
+        injectSupaipLinksHtml(restrictionsText) +
+        escapeHtml(footPart);
+
+      lastPxadelPlainText =
+        headPart +
+        injectSupaipLinksPlain(restrictionsText) +
+        footPart;
+    }
+
+    document.getElementById("pxadelComment").addEventListener("input", updatePxadelSummary);
+
+    document.getElementById("copyPxadelBtn").addEventListener("click", async () => {
+      if (!lastPxadelPlainText) return;
+      try {
+        await navigator.clipboard.writeText(lastPxadelPlainText);
+        document.getElementById("status").textContent = "Résumé PXADEL copié";
+      } catch (e) {
+        document.getElementById("status").textContent = "Copie impossible";
+      }
+    });
+
+    document.getElementById("shareWhatsappBtn").addEventListener("click", () => {
+      if (!lastPxadelPlainText) return;
+      const url = `https://wa.me/?text=${encodeURIComponent(lastPxadelPlainText)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+
+    function buildRowsFromItems(items) {
+      const nonEmpty = items.filter(it => it && it.str && it.str.trim());
+      const rows = [];
+      for (const it of nonEmpty) {
+        let row = rows.find(r => Math.abs(r.y - it.y) <= 4);
+        if (!row) {
+          row = { y: it.y, items: [] };
+          rows.push(row);
+        }
+        row.items.push(it);
+      }
+      rows.sort((a, b) => b.y - a.y);
+      rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
+      return rows;
+    }
+
+    function findValueBelowLabel(items, labelRegex, valueRegex, filterFn = null) {
+      const rows = buildRowsFromItems(items);
+
+      for (let rIdx = 0; rIdx < rows.length; rIdx++) {
+        const row = rows[rIdx];
+        const rowText = row.items.map(i => i.str).join(" ");
+        if (!labelRegex.test(rowText)) continue;
+
+        let labelItems = row.items.filter(i => labelRegex.test(i.str));
+        if (!labelItems.length) labelItems = row.items;
+        const labelX = Math.min(...labelItems.map(i => i.x));
+        const labelCenterX = labelItems.reduce((acc, i) => acc + i.x + (i.w || 40) / 2, 0) / labelItems.length;
+        const labelY = row.y;
+
+        const candidates = [];
+        for (let k = rIdx; k < Math.min(rows.length, rIdx + 5); k++) {
+          const candRow = rows[k].items;
+          const joined = candRow.map(i => i.str).join(" ");
+          const gRe = new RegExp(valueRegex.source, valueRegex.flags.includes("g") ? valueRegex.flags : valueRegex.flags + "g");
+          for (const am of joined.matchAll(gRe)) {
+            const valStr = (am[1] || am[0]).trim();
+            if (filterFn && !filterFn(valStr)) continue;
+            const prefix = joined.slice(0, am.index);
+            let accLen = 0;
+            let estX = candRow[0] ? candRow[0].x : labelX;
+            for (const ci of candRow) {
+              if (accLen + ci.str.length >= prefix.length) {
+                estX = ci.x;
+                break;
+              }
+              accLen += ci.str.length + 1;
+            }
+            candidates.push({
+              val: valStr,
+              x: estX,
+              y: rows[k].y,
+              rowIdx: k
+            });
+          }
+        }
+
+        if (candidates.length) {
+          candidates.sort((a, b) => {
+            const dxA = Math.abs(a.x - labelX);
+            const dxB = Math.abs(b.x - labelX);
+            const dcA = Math.abs(a.x - labelCenterX);
+            const dcB = Math.abs(b.x - labelCenterX);
+            const dyA = Math.max(0, labelY - a.y);
+            const dyB = Math.max(0, labelY - b.y);
+            const scoreA = Math.min(dxA, dcA) * 2 + dyA;
+            const scoreB = Math.min(dxB, dcB) * 2 + dyB;
+            return scoreA - scoreB;
+          });
+          return candidates[0].val;
+        }
+      }
+      return "";
+    }
+
+    function isValidOaciCandidate(tok) {
+      if (!/^[A-Z]{2}[A-Z0-9]{2}$/.test(tok)) return false;
+      const forbidden = new Set([
+        "DEST", "DATE", "HEUR", "PLAN", "PLAF", "RAYO", "COUL",
+        "DURE", "REGL", "VOLS", "TRAJ", "SOFI", "SIAF", "LFFA",
+        "TORA", "TODA", "ASDA", "RESA", "ATIS", "AFIS", "ATCO",
+        "INFO", "PERP", "PERM", "NOTM", "GNSS", "RNAV", "AMSL"
+      ]);
+      return !forbidden.has(tok);
+    }
+
+    async function extractPdfData(file) {
+      if (typeof pdfjsLib === "undefined") {
+        throw new Error("pdf.js non chargé");
+      }
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      let fullText = "";
+      const allItems = [];
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        const items = content.items.map(it => ({
+          str: it.str,
+          x: it.transform[4],
+          y: it.transform[5],
+          w: it.width || 0,
+          page: p
+        }));
+        allItems.push(...items);
+        const sorted = [...items].sort((a, b) => (Math.abs(b.y - a.y) > 3 ? b.y - a.y : a.x - b.x));
+        let lines = [], curY = null, curLine = [];
+        for (const it of sorted) {
+          if (curY === null || Math.abs(it.y - curY) > 3) {
+            if (curLine.length) lines.push(curLine.join(" "));
+            curLine = [it.str];
+            curY = it.y;
+          } else {
+            curLine.push(it.str);
+          }
+        }
+        if (curLine.length) lines.push(curLine.join(" "));
+        fullText += `\n--- PAGE ${p} ---\n` + lines.join("\n");
+      }
+      return { fullText, allItems };
+    }
+
+    function parseHeaderParams(text, allItems = []) {
+      const page1Items = allItems.filter(it => it.page === 1);
+      const page1Raw = text.split("--- PAGE 2 ---")[0] || text;
+      const pibBlockText = page1Raw.split(/A[ÉE]RODROME DE D[ÉE]PART/i)[0] || page1Raw;
+      const pick = (re, pred = null) => {
+        const gRe = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
+        for (const m of pibBlockText.matchAll(gRe)) {
+          const val = (m[1] || m[0] || "").trim();
+          if (val && (!pred || pred(val))) return val;
+        }
+        return "";
+      };
+      const dateRe = /(\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2})/;
+      const oaciRe = /\b([A-Z]{2}[A-Z0-9]{2})\b/;
+      const intRe = /\b(\d+)\b/;
+
+      let prodUtc = page1Items.length
+        ? findValueBelowLabel(page1Items, /Date et [Hh]eure de production \(UTC\)/, dateRe)
+        : "";
+      let depUtc = page1Items.length
+        ? findValueBelowLabel(page1Items, /Date et [Hh]eure de d[ée]part \(UTC\)/, dateRe)
+        : "";
+
+      if (!prodUtc) prodUtc = pick(/Date et [Hh]eure de production \(UTC\)[\s\S]{0,80}?(\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2})/);
+      if (!depUtc) depUtc = pick(/Date et [Hh]eure de d[ée]part \(UTC\)[\s\S]{0,80}?(\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2})/);
+
+      const allDates = [...pibBlockText.matchAll(/\b(\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2})\b/g)].map(m => m[1]);
+      if (!prodUtc && allDates.length >= 1) prodUtc = allDates[0];
+      if (!depUtc && allDates.length >= 2) {
+        depUtc = allDates.find(d => d !== prodUtc) || allDates[1];
+      }
+
+      let dep = (page1Items.length ? findValueBelowLabel(page1Items, /^\s*D[ée]part\s*$/i, oaciRe, isValidOaciCandidate) : "")
+        || (page1Items.length ? findValueBelowLabel(page1Items, /\bD[ée]part(?!\s*(?:réel|effectif|prévu|planifi[ée]|heure|date))\b/i, oaciRe, isValidOaciCandidate) : "")
+        || pick(/\bD[ée]part(?:\s*\(OACI\))?[\s\n:]+([A-Z]{2}[A-Z0-9]{2})\b/i, isValidOaciCandidate);
+      let dest = (page1Items.length ? findValueBelowLabel(page1Items, /^\s*Destination\s*$/i, oaciRe, isValidOaciCandidate) : "")
+        || (page1Items.length ? findValueBelowLabel(page1Items, /\bDestination\b/i, oaciRe, isValidOaciCandidate) : "")
+        || pick(/\bDestination(?:\s*\(OACI\))?[\s\n:]+([A-Z]{2}[A-Z0-9]{2})\b/i, isValidOaciCandidate);
+
+      if ((!dep || !dest) && pibBlockText) {
+        const axisMatch = pibBlockText.match(/\b([A-Z]{2}[A-Z0-9]{2})\b[\s\S]{0,30}?(?:-|–|->|\/)[\s\S]{0,30}?\b([A-Z]{2}[A-Z0-9]{2})\b/);
+        if (axisMatch) {
+          if (!dep && isValidOaciCandidate(axisMatch[1])) dep = axisMatch[1];
+          if (!dest && isValidOaciCandidate(axisMatch[2])) dest = axisMatch[2];
+        }
+      }
+
+      const dur = (page1Items.length ? findValueBelowLabel(page1Items, /\bDur[ée]e\b/i, /\b(\d{4})\b/) : "")
+        || pick(/\bDur[ée]e[\s\n:]+(\d{4})\b/i);
+      const rule = (page1Items.length ? findValueBelowLabel(page1Items, /R[èe]gle de vol/i, /\b([A-Z]{2,4})\b/, v => ["VFR", "IFR", "VFRN", "SVFR"].includes(v)) : "")
+        || pick(/R[èe]gle de vol[\s\n:]+([A-Z]{2,4})\b/i, v => ["VFR", "IFR", "VFRN", "SVFR"].includes(v));
+      const floor = (page1Items.length ? findValueBelowLabel(page1Items, /\bPlancher\b/i, intRe) : "")
+        || pick(/\bPlancher\s*(?:\(en FL\))?[\s\n:]+(\d+)/i);
+      const ceil = (page1Items.length ? findValueBelowLabel(page1Items, /\bPlafond\b/i, intRe) : "")
+        || pick(/\bPlafond\s*(?:\(en FL\))?[\s\n:]+(\d+)/i);
+      const radius = (page1Items.length ? findValueBelowLabel(page1Items, /\bRayon\b/i, intRe) : "")
+        || pick(/\bRayon\s*(?:\(en NM\))?[\s\n:]+(\d+)/i);
+      const corridor = (page1Items.length ? findValueBelowLabel(page1Items, /Demi-couloir/i, intRe) : "")
+        || pick(/Demi-couloir\s*(?:\(en NM\))?[\s\n:]+(\d+)/i);
+
+      return {
+        prodUtc,
+        depUtc,
+        dur,
+        rule,
+        dep,
+        dest,
+        floor,
+        ceil,
+        radius,
+        corridor
+      };
+    }
+
+    function resetParamsInputs() {
+      ["pGenTime", "pDepPlanned", "pDur", "pRule", "pDep", "pDest", "pFloor", "pCeil", "pRadius", "pCorridor"]
+        .forEach((id) => {
+          document.getElementById(id).value = "—";
+        });
+    }
+
+    function fillParamsInputs(p) {
+      resetParamsInputs();
+      if (p.prodUtc) document.getElementById("pGenTime").value = p.prodUtc;
+      if (p.depUtc) document.getElementById("pDepPlanned").value = p.depUtc;
+      if (p.dur) document.getElementById("pDur").value = p.dur;
+      if (p.rule) document.getElementById("pRule").value = p.rule;
+      if (p.dep) document.getElementById("pDep").value = p.dep;
+      if (p.dest) document.getElementById("pDest").value = p.dest;
+      if (p.floor !== "") document.getElementById("pFloor").value = p.floor;
+      if (p.ceil !== "") document.getElementById("pCeil").value = p.ceil;
+      if (p.radius !== "") document.getElementById("pRadius").value = p.radius;
+      if (p.corridor !== "") document.getElementById("pCorridor").value = p.corridor;
+    }
+
+    function detectSectionForOffset(text, offset, foundHeaders) {
+      let currentSec = "GÉNÉRAL";
+      for (const h of foundHeaders) {
+        if (h.index <= offset) currentSec = h.title;
+        else break;
+      }
+      return currentSec;
+    }
+
+    function parseNotams(text) {
+      const headerCandidates = [
+        "AÉRODROME DE DESTINATION",
+        "INSTALLATIONS ET SERVICES",
+        "ORGANISATION DE L'ESPACE AÉRIEN ET SERVICES DE LA CIRCULATION AÉRIENNE",
+        "EN-ROUTE",
+        "ORGANISATION DE L'ESPACE AÉRIEN ET PROCÉDURES",
+        "SERVICES DE LA CIRCULATION AÉRIENNE ET VOLMET",
+        "RESTRICTIONS DE L'ESPACE AÉRIEN",
+        "OBSTACLES",
+        "LFXX AD OU HEL SANS CODE OACI"
+      ];
+      const foundHeaders = [];
+      for (const title of headerCandidates) {
+        const re = new RegExp(title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+        let m;
+        while ((m = re.exec(text)) !== null) {
+          foundHeaders.push({ title, index: m.index });
+        }
+      }
+      foundHeaders.sort((a, b) => a.index - b.index);
+
+      const distinctTitles = [...new Set(foundHeaders.map(h => h.title))];
+      if (distinctTitles.length) {
+        availableHeaders = distinctTitles;
+        selectedHeaders = new Set(distinctTitles);
+        renderHeadersChecklist();
+      }
+
+      const notamRegex = /(LFFA-[A-Z]\d{4}\/\d{2})([\s\S]*?)(?=(?:LFFA-[A-Z]\d{4}\/\d{2}|SIA France - SOFIA-Briefing|$))/g;
+      const notams = [];
+      let match;
+      while ((match = notamRegex.exec(text)) !== null) {
+        const id = match[1], block = match[2];
+        const section = detectSectionForOffset(text, match.index, foundHeaders);
+        const duAuMatch = block.match(/DU:\s*([^\n]+?)\s+AU:\s*([^\n]+)/);
+        const qMatch = block.match(/Q\)\s*[^\n]*?(\d{4}[NS]\d{5}[EW])(\d{3})/);
+        const dMatch = block.match(/\nD\)\s*([^\n]+)/);
+        const eMatch = block.match(/\nE\)\s*([\s\S]*?)(?=\n[F-G]\)|\nLFFA-|\nSIA France|$)/);
+        const fgMatch = block.match(/\nF\)\s*([^\n]+)\s*\nG\)\s*([^\n]+)/);
+        const psnMatch = block.match(/PSN[:\s]+(\d{6}(?:\.\d+)?[NS])\s+(\d{7}(?:\.\d+)?[EW])/);
+
+        notams.push({
+          id,
+          section,
+          validFromStr: duAuMatch ? duAuMatch[1].trim() : "",
+          validToStr: duAuMatch ? duAuMatch[2].trim() : "",
+          validFrom: parseSofiaDate(duAuMatch ? duAuMatch[1] : ""),
+          validTo: parseSofiaDate(duAuMatch ? duAuMatch[2] : ""),
+          dSchedule: dMatch ? dMatch[1].trim() : null,
+          qCenter: qMatch ? qMatch[1] : null,
+          qRadiusNm: qMatch ? parseInt(qMatch[2], 10) : null,
+          floor: fgMatch ? fgMatch[1].trim() : null,
+          ceiling: fgMatch ? fgMatch[2].trim() : null,
+          psnLat: psnMatch ? psnMatch[1] : null,
+          psnLon: psnMatch ? psnMatch[2] : null,
+          eText: eMatch ? eMatch[1].trim() : block.trim()
+        });
+      }
+      return notams;
+    }
+
+    function blackSquareMarker(lat, lon, popupHtml) {
+      return L.marker([lat, lon], {
+        icon: L.divIcon({
+          className: "",
+          html: `<div style="width:12px;height:12px;background:#000000;border:2px solid #ffffff;box-shadow:0 0 4px rgba(0,0,0,0.7);"></div>`,
+          iconSize: [12, 12],
+          iconAnchor: [6, 6]
+        })
+      }).bindPopup(popupHtml);
+    }
+
+    function buildCorridorCapsuleLatLngs(adDep, adDest, halfCorridorNm, endRadiusNm, arcSteps = 24) {
+      const corridorMeters = (halfCorridorNm > 0 ? halfCorridorNm : 0) * 1852;
+      const rawEndMeters = (endRadiusNm > 0 ? endRadiusNm : halfCorridorNm) * 1852;
+      if (corridorMeters <= 0 && rawEndMeters <= 0) return [];
+
+      const rBand = corridorMeters > 0 ? corridorMeters : rawEndMeters;
+      const rArc = Math.max(rawEndMeters, rBand);
+
+      const midLat = (adDep.lat + adDest.lat) / 2;
+      const midLon = (adDep.lon + adDest.lon) / 2;
+      const metersPerDegLat = 111320;
+      const metersPerDegLon = 111320 * Math.cos((midLat * Math.PI) / 180);
+
+      const toXY = (ad) => ({
+        x: (ad.lon - midLon) * metersPerDegLon,
+        y: (ad.lat - midLat) * metersPerDegLat
+      });
+      const toLatLng = (pt) => [
+        midLat + pt.y / metersPerDegLat,
+        midLon + pt.x / metersPerDegLon
+      ];
+
+      const a = toXY(adDep);
+      const b = toXY(adDest);
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist < 1e-3) {
+        const pts = [];
+        for (let i = 0; i <= arcSteps * 2; i++) {
+          const ang = (2 * Math.PI * i) / (arcSteps * 2);
+          pts.push(toLatLng({ x: a.x + rArc * Math.cos(ang), y: a.y + rArc * Math.sin(ang) }));
+        }
+        return pts;
+      }
+
+      const ux = dx / dist;
+      const uy = dy / dist;
+      const nx = -uy;
+      const ny = ux;
+      const thetaAB = Math.atan2(uy, ux);
+
+      const destArc = [];
+      for (let i = 0; i <= arcSteps; i++) {
+        const ang = (thetaAB - Math.PI / 2) + (Math.PI * i) / arcSteps;
+        destArc.push(toLatLng({
+          x: b.x + rArc * Math.cos(ang),
+          y: b.y + rArc * Math.sin(ang)
+        }));
+      }
+
+      const depArc = [];
+      for (let i = 0; i <= arcSteps; i++) {
+        const ang = (thetaAB + Math.PI / 2) + (Math.PI * i) / arcSteps;
+        depArc.push(toLatLng({
+          x: a.x + rArc * Math.cos(ang),
+          y: a.y + rArc * Math.sin(ang)
+        }));
+      }
+
+      return [
+        toLatLng({ x: a.x + nx * rBand, y: a.y + ny * rBand }),
+        toLatLng({ x: b.x + nx * rBand, y: b.y + ny * rBand }),
+        ...destArc,
+        toLatLng({ x: b.x - nx * rBand, y: b.y - ny * rBand }),
+        toLatLng({ x: a.x - nx * rBand, y: a.y - ny * rBand }),
+        ...depArc
+      ];
+    }
+
+    function renderRoute(fit = false) {
+      if (!map || !routeLayer) return;
+      routeLayer.clearLayers();
+      const depCode = document.getElementById("pDep").value.trim().toUpperCase();
+      const destCode = document.getElementById("pDest").value.trim().toUpperCase();
+      const halfCorridorNm = parseFloat(document.getElementById("pCorridor").value) || 0;
+      const radiusNm = parseFloat(document.getElementById("pRadius").value) || 0;
+      const bounds = [];
+
+      updateFoundAerodromesBox();
+
+      const adDep = depCode && depCode !== "—" ? AERODROMES[depCode] : null;
+      const adDest = destCode && destCode !== "—" ? AERODROMES[destCode] : null;
+
+      if (adDep) {
+        blackSquareMarker(adDep.lat, adDep.lon, `<strong>Départ : ${depCode}</strong><br>${adDep.name}`)
+          .addTo(routeLayer);
+        bounds.push([adDep.lat, adDep.lon]);
+      }
+      if (adDest) {
+        blackSquareMarker(adDest.lat, adDest.lon, `<strong>Arrivée : ${destCode}</strong><br>${adDest.name}`)
+          .addTo(routeLayer);
+        bounds.push([adDest.lat, adDest.lon]);
+      }
+      if (adDep && adDest) {
+        L.polyline([[adDep.lat, adDep.lon], [adDest.lat, adDest.lon]], {
+          color: "#0f172a", weight: 2.5, dashArray: "6,4"
+        }).addTo(routeLayer);
+
+        if (halfCorridorNm > 0 || radiusNm > 0) {
+          const corridorPoly = buildCorridorCapsuleLatLngs(adDep, adDest, halfCorridorNm, radiusNm);
+          if (corridorPoly.length) {
+            L.polygon(corridorPoly, {
+              color: "#0284c7",
+              weight: 1.5,
+              dashArray: "4,4",
+              fillColor: "#0284c7",
+              fillOpacity: 0.08
+            }).addTo(routeLayer);
+            bounds.push(...corridorPoly);
+          }
+        }
+      }
+      if (fit && bounds.length) map.fitBounds(bounds, { padding: [45, 45] });
+    }
+
+    function renderNotams() {
+      if (!notamLayer) return;
+      notamLayer.clearLayers();
+      const { startMs, endMs } = getFlightWindowMs();
+      const maxRadius = parseInt(document.getElementById("maxRadius").value, 10);
+      const onlyActive = document.getElementById("onlyActive").checked;
+
+      const listEl = document.getElementById("notam-list");
+      listEl.innerHTML = "";
+      let activeCount = 0;
+
+      const headerFiltered = currentNotams.filter(n =>
+        selectedHeaders.size === 0 ? false : selectedHeaders.has(n.section)
+      );
+
+      headerFiltered.forEach(n => {
+        const validity = evaluateNotamValidity(n, startMs, endMs);
+        const isInactive = validity.status === "inactive";
+        if (!isInactive) activeCount++;
+        if (onlyActive && isInactive) return;
+
+        const color = validity.status === "active" ? "#d9534f" : validity.status === "cond" ? "#e67e22" : "#6c757d";
+
+        if (n.qCenter && n.qRadiusNm && n.qRadiusNm <= maxRadius) {
+          const lat = parseLat(n.qCenter.slice(0, 5));
+          const lon = parseLon(n.qCenter.slice(5));
+          if (lat !== null && lon !== null) {
+            const altInfo = (n.floor || n.ceiling) ? `<br><strong>Altitudes :</strong> ${n.floor || "?"} → ${n.ceiling || "?"}` : "";
+            L.circle([lat, lon], {
+              radius: n.qRadiusNm * 1852, color, weight: isInactive ? 1 : 2,
+              dashArray: validity.status === "cond" ? "5,5" : null, fillOpacity: isInactive ? 0.03 : 0.12
+            }).bindPopup(`<strong>${n.id}</strong> [${validity.label}]<br>Rayon Q) : ${n.qRadiusNm} NM${altInfo}<br><br>${n.eText.slice(0, 240)}`).addTo(notamLayer);
+          }
+        }
+
+        if (n.psnLat && n.psnLon) {
+          const lat = parseLat(n.psnLat);
+          const lon = parseLon(n.psnLon);
+          if (lat !== null && lon !== null) {
+            L.circleMarker([lat, lon], {
+              radius: 6, color: isInactive ? "#6c757d" : "#0b5ed7", fillOpacity: 0.9
+            }).bindPopup(`<strong>${n.id}</strong> [${validity.label}]<br>${n.eText}`).addTo(notamLayer);
+          }
+        }
+
+        const badgeClass = validity.status === "active" ? "badge-active" : validity.status === "cond" ? "badge-cond" : "badge-inactive";
+        const card = document.createElement("div");
+        card.className = `notam-item status-${validity.status}`;
+        card.innerHTML =
+          `<div class="notam-header">` +
+            `<div><span class="notam-id">${n.id}${n.qRadiusNm ? ` · ${n.qRadiusNm} NM` : ""}</span><span class="notam-section-tag">${n.section}</span></div>` +
+            `<span class="badge ${badgeClass}">${validity.label}</span>` +
+          `</div>` +
+          `<div class="notam-dates">DU ${n.validFromStr} AU ${n.validToStr}${n.dSchedule ? ` · D) ${n.dSchedule}` : ""}</div>` +
+          `<div class="notam-text">${injectSupaipLinksHtml(n.eText)}</div>`;
+        listEl.appendChild(card);
+      });
+
+      document.getElementById("notam-summary").textContent =
+        `NOTAM affichés : ${activeCount} / ${headerFiltered.length} (${currentNotams.length} total · Filtre Q) ≤ ${maxRadius} NM)`;
+    }
+
+    document.getElementById("pDep").addEventListener("input", () => {
+      renderRoute(false);
+      updatePxadelSummary();
+    });
+    document.getElementById("pDest").addEventListener("input", () => {
+      renderRoute(false);
+      updatePxadelSummary();
+    });
+
+    document.getElementById("maxRadius").addEventListener("input", (e) => {
+      document.getElementById("radiusVal").textContent = e.target.value;
+      renderNotams();
+      updatePxadelSummary();
+    });
+    document.getElementById("onlyActive").addEventListener("change", () => {
+      renderNotams();
+      updatePxadelSummary();
+    });
+
+    document.getElementById("pdfInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      document.getElementById("status").textContent = "Analyse PDF...";
+      try {
+        const { fullText: text, allItems } = await extractPdfData(file);
+        fillParamsInputs(parseHeaderParams(text, allItems));
+        currentNotams = parseNotams(text);
+        renderRoute(true);
+        renderNotams();
+        updatePxadelSummary();
+        document.getElementById("status").textContent = `${file.name}`;
+      } catch (err) {
+        document.getElementById("status").textContent = "Erreur PDF : " + (err.message || err);
+      }
+    });
+
+    initMapSafe();
+    autoLoadAerodromeFrCsv();
+  </script>
+</body>
+</html>
