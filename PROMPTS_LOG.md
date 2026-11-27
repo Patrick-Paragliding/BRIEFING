@@ -19,7 +19,7 @@ Curseur de rayon maximal : SPEC.md et TESTS_UX.md mentionnent une plage démarra
 13. Pourquoi le SUPAIP 212/25 apparait (certainement un problème de data sur Fichier EA PXA)
 14. OK Revoir supaip.fr le fichier SOFIA Briefing (en fait il fait tourner un rapport sur 5 FIR) > pas de besoin de route ?
 15. Verifier Résultat vs https://www.flyscope.fr/
-
+16. Et si on mettait différents boutons en haut pour accéder à la page Web du visualisateur AZBA, eAIP, region centre et SOFIA > Une sortie de menu pour rappeler la séquence logique du matin ou de ne pas avoir se rappeler où naviguer > en fait faire la séquence logique classique. 
 
 
 ### 2026-11-26 — Organisation de `samples/` (OpenAir) et règle AZBA (Écran 2)
