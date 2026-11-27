@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Briefing du Matin</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <style>
+    :root {
+      --bg: #eef2f6;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #cbd5e1;
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --primary-light: #eff6ff;
+      --warn-bg: #fef2f2;
+      --warn-border: #ef4444;
+      --warn-text: #991b1b;
+      --ok-bg: #f0fdf4;
+      --ok-text: #166534;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 14px 14px 14px;
+      gap: 10px;
+      max-width: 1680px;
+      margin: 0 auto;
+    }
+
+    header.app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 9px 16px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-header {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-header:hover {
+      background: #334155;
+    }
+
+    .btn-blue {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: #ffffff;
+    }
+
+    .btn-blue:hover {
+      background: #1d4ed8;
+    }
+
+    .top-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .top-bar-file {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1 1 340px;
+      min-width: 260px;
+    }
+
+    .top-bar-file label {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    input[type="file"] {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px dashed #94a3b8;
+      border-radius: 8px;
+      background: #f8fafc;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+
+    .top-bar-slider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1 1 320px;
+      min-width: 260px;
+      background: #f8fafc;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .top-bar-slider label {
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .slider-badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 11.5px;
+      white-space: nowrap;
+    }
+
+    .warning-banner {
+      display: none;
+      background: var(--warn-bg);
+      border: 1.5px solid var(--warn-border);
+      color: var(--warn-text);
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .warning-banner.visible {
+      display: block;
+    }
+
+    .warning-banner a {
+      color: var(--warn-text);
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .main-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(380px, 1fr);
+      gap: 12px;
+      min-height: 620px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 1120px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+    }
+
+    .map-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+      min-height: 600px;
+    }
+
+    @media (max-width: 1120px) {
+      .map-card {
+        min-height: 440px;
+      }
+    }
+
+    .map-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .map-toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .map-toolbar label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .map-toolbar select {
+      padding: 5px 8px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      font-size: 12.5px;
+      color: var(--text);
+    }
+
+    #map {
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 500px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      z-index: 1;
+    }
+
+    @media (max-width: 1120px) {
+      #map {
+        min-height: 360px;
+      }
+    }
+
+    .map-legend {
+      font-size: 11.5px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 13px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    details.selector-details > summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      user-select: none;
+    }
+
+    details.selector-details > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .selector-body {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .headers-toolbar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .btn-mini {
+      padding: 4px 9px;
+      font-size: 11.5px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .btn-mini:hover {
+      background: #e2e8f0;
+    }
+
+    .headers-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 155px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .header-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+
+    .notams-panel {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 360px;
+    }
+
+    .card-title {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .notam-list {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 540px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .notam-item {
+      border: 1px solid var(--border);
+      border-left: 4px solid #d97706;
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #ffffff;
+    }
+
+    .notam-item.is-restriction {
+      border-left-color: #dc2626;
+    }
+
+    .notam-item-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 4px;
+    }
+
+    .notam-id {
+      font-weight: 700;
+      font-size: 13px;
+      color: #0f172a;
+    }
+
+    .badge {
+      font-size: 10.5px;
+      padding: 1.5px 6px;
+      border-radius: 6px;
+      background: #e2e8f0;
+      color: #334155;
+      font-weight: 600;
+    }
+
+    .badge-openair {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .notam-body {
+      font-size: 12.5px;
+      white-space: pre-line;
+      color: #1e293b;
+    }
+
+    .notam-body a.sia-supaip-link {
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
+    dialog.modal-dialog {
+      max-width: 960px;
+      width: calc(100% - 24px);
+      max-height: 92vh;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      background: #ffffff;
+      color: var(--text);
+      overflow-y: auto;
+    }
+
+    dialog.modal-dialog::backdrop {
+      background: rgba(15, 23, 42, 0.55);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 9px;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .pxadel-box {
+      width: 100%;
+      min-height: 170px;
+      font-family: inherit;
+      font-size: 13.5px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #f8fafc;
+      color: var(--text);
+      resize: vertical;
+    }
+
+    .comment-input {
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13.5px;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 9px 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-whatsapp {
+      background: #16a34a;
+      color: #ffffff;
+    }
+
+    .btn-whatsapp:hover {
+      background: #15803d;
+    }
+
+    .copy-feedback {
+      font-size: 12px;
+      color: var(--ok-text);
+      font-weight: 600;
+      margin-top: 5px;
+      min-height: 16px;
+    }
+
+    .params-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .param-field {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .param-field label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .param-field input {
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #f8fafc;
+      font-size: 12.5px;
+      color: var(--text);
+    }
+
+    .review-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(360px, 1.35fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    @media (max-width: 820px) {
+      .review-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .review-box {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #f8fafc;
+    }
+
+    .review-box h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+    }
+
+    .pdf-viewer-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .pdf-viewer-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pdf-page-indicator {
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 0 6px;
+    }
+
+    .pdf-canvas-wrap {
+      width: 100%;
+      max-height: 62vh;
+      overflow: auto;
+      background: #334155;
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    #pdfPreviewCanvas {
+      max-width: 100%;
+      height: auto;
+      background: #ffffff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    .help-section {
+      margin-bottom: 12px;
+      font-size: 13.5px;
+    }
+
+    .help-section h3 {
+      margin: 0 0 4px 0;
+      font-size: 14px;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-left">
+        <button type="button" id="btnOpenReview" class="btn-header btn-blue">1. Revue Briefing</button>
+        <button type="button" id="btnOpenSummary" class="btn-header btn-blue">2. Résumé Briefing</button>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="btnOpenHelp" class="btn-header">Aide</button>
+      </div>
+    </header>
+
+    <section class="top-bar" aria-label="Sélection du fichier et rayon des cercles">
+      <div class="top-bar-file">
+        <label for="pdfFileInput">PDF SOFIA (PIB TRAJET) :</label>
+        <input type="file" id="pdfFileInput" accept="application/pdf,.pdf" />
+      </div>
+
+      <div class="top-bar-slider">
+        <label for="radiusSlider">Cercles &gt; <span id="radiusValueLabel">50</span> NM</label>
+        <input type="range" id="radiusSlider" min="2" max="200" step="1" value="50" />
+        <span class="slider-badge">Min : 2 NM</span>
+      </div>
+    </section>
+
+    <div id="warningBanner" class="warning-banner" role="alert">
+      <strong>Attention :</strong> <span id="warningText"></span>
+      <a id="warningHelpLink">Comprendre l'impact (Aide)</a>
+    </div>
+
+    <div class="main-grid">
+      <section class="map-card" aria-label="Carte des espaces aériens et du trajet">
+        <div class="map-toolbar">
+          <div class="map-toolbar-group">
+            <label for="basemapSelect">Fond de carte :</label>
+            <select id="basemapSelect">
+              <option value="https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}">IGN Plan IGN v2</option>
+              <option value="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png">CartoDB Positron (clair)</option>
+              <option value="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png">CartoDB Voyager</option>
+              <option value="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png">OpenTopoMap (relief)</option>
+              <option value="https://tile.openstreetmap.org/{z}/{x}/{y}.png">OpenStreetMap</option>
+            </select>
+          </div>
+        </div>
+        <div id="map"></div>
+        <div class="map-legend">
+          <span><span class="legend-dot" style="background:#2563eb;"></span>Couloir trajet</span>
+          <span><span class="legend-dot" style="background:#ef4444;"></span>Zone OpenAir (SUP AIP / NOTAM)</span>
+          <span><span class="legend-dot" style="background:#f59e0b;"></span>Cercle NOTAM Q)</span>
+          <span><span class="legend-dot" style="background:#94a3b8;"></span>Cercle Q) remplacé (grisé)</span>
+        </div>
+      </section>
+
+      <div class="right-column">
+        <section class="card" aria-label="Sélection des rubriques NOTAM">
+          <details class="selector-details">
+            <summary>
+              <span>Sélection par NOTAM (rubriques SOFIA)</span>
+              <span id="selectedHeadersBadge" class="slider-badge">0 active</span>
+            </summary>
+            <div class="selector-body">
+              <div class="headers-toolbar">
+                <button type="button" id="btnHeadersDefault" class="btn-mini">Défaut (4)</button>
+                <button type="button" id="btnHeadersAll" class="btn-mini">Tout</button>
+                <button type="button" id="btnHeadersNone" class="btn-mini">Aucun</button>
+              </div>
+              <div id="headersContainer" class="headers-grid"></div>
+            </div>
+          </details>
+        </section>
+
+        <section class="card notams-panel" aria-label="Affichage des NOTAM">
+          <h2 class="card-title">
+            <span>Affichage des NOTAM : <span id="visibleCountLabel">0</span> / <span id="totalCountLabel">0</span></span>
+          </h2>
+          <div id="notamListContainer" class="notam-list">
+            <div style="color:#64748b;font-size:13px;">
+              Chargez un PDF SOFIA Briefing pour afficher les NOTAM et le trajet.
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="reviewDialog" class="modal-dialog">
+    <div class="modal-header">
+      <h2>1. Revue Briefing &amp; Aperçu PDF SOFIA</h2>
+      <button type="button" id="btnCloseReview" class="btn-mini">Fermer</button>
+    </div>
+
+    <div class="review-layout">
+      <div class="review-box">
+        <h3>Paramètres PIB TRAJET</h3>
+        <div class="params-grid">
+          <div class="param-field">
+            <label>Heure génération</label>
+            <input type="text" id="revGenAt" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Départ planifié</label>
+            <input type="text" id="revDepAt" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Durée (HHMM)</label>
+            <input type="text" id="revDuration" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Règle de vol</label>
+            <input type="text" id="revRules" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Départ (OACI)</label>
+            <input type="text" id="revDeparture" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Destination (OACI)</label>
+            <input type="text" id="revDestination" readonly value="—" />
+          </div>
+          <div class="param-field" style="grid-column: span 2;">
+            <label>Points tournants / contournement</label>
+            <input type="text" id="revWaypoints" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Plancher / Plafond (FL)</label>
+            <input type="text" id="revFloorCeiling" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Rayon / Demi-couloir (NM)</label>
+            <input type="text" id="revRadiusCorridor" readonly value="—" />
+          </div>
+        </div>
+      </div>
+
+      <div class="review-box">
+        <div class="pdf-viewer-toolbar">
+          <h3 style="margin:0;">Aperçu visuel du PDF SOFIA</h3>
+          <div class="pdf-viewer-controls">
+            <button type="button" id="btnPdfPrev" class="btn-mini">Préc.</button>
+            <span id="pdfPageInfo" class="pdf-page-indicator">Page 0 / 0</span>
+            <button type="button" id="btnPdfNext" class="btn-mini">Suiv.</button>
+            <button type="button" id="btnPdfZoomOut" class="btn-mini">-</button>
+            <button type="button" id="btnPdfZoomIn" class="btn-mini">+</button>
+          </div>
+        </div>
+        <div id="pdfViewerEmpty" style="color:#64748b;font-size:13px;padding:14px 4px;">
+          Aucun PDF SOFIA chargé pour le moment.
+        </div>
+        <div class="pdf-canvas-wrap" id="pdfCanvasWrap" style="display:none;">
+          <canvas id="pdfPreviewCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="summaryDialog" class="modal-dialog" style="max-width:740px;">
+    <div class="modal-header">
+      <h2>2. Résumé Briefing</h2>
+      <button type="button" id="btnCloseSummary" class="btn-mini">Fermer</button>
+    </div>
+
+    <textarea id="pxadelSummaryBox" class="pxadel-box" readonly></textarea>
+    <input
+      type="text"
+      id="userCommentInput"
+      class="comment-input"
+      placeholder="Ajouter un commentaire libre au briefing (optionnel)..."
+    />
+    <div class="actions-row">
+      <button type="button" id="btnCopySummary" class="btn btn-primary">Copier le texte</button>
+      <a id="btnWhatsAppShare" class="btn btn-whatsapp" href="#" target="_blank" rel="noopener noreferrer">
+        WhatsApp
+      </a>
+    </div>
+    <div id="copyFeedback" class="copy-feedback"></div>
+  </dialog>
+
+  <dialog id="helpDialog" class="modal-dialog" style="max-width:680px;">
+    <div class="modal-header">
+      <h2>Aide — Briefing du Matin</h2>
+      <button type="button" id="btnCloseHelp" class="btn-mini">Fermer</button>
+    </div>
+
+    <div class="help-section">
+      <h3>1. Convention codes OACI et contrôle strict</h3>
+      <p>
+        Par convention, saisissez des <strong>codes OACI aérodromes</strong> dans SOFIA Briefing
+        (Départ, Arrivée et points tournants). L'application vérifie que <strong>tous</strong> les aérodromes du trajet
+        sont présents dans la base embarquée. Si un seul code est introuvable, un bandeau <strong>Warning</strong> s'affiche
+        et <strong>aucun tracé</strong> n'est dessiné sur la carte afin d'éviter toute représentation erronée du couloir.
+      </p>
+    </div>
+
+    <div class="help-section">
+      <h3>2. Filtrage amont SOFIA Briefing &amp; Entêtes</h3>
+      <p>
+        Le tri par date et créneau horaire relève exclusivement de <strong>SOFIA Briefing</strong>.
+        Par défaut, 4 rubriques sont cochées : <em>RESTRICTIONS DE L'ESPACE AÉRIEN</em> et les 3 rubriques contenant
+        <em>ORGANISATION DE L'ESPACE</em>.
+      </p>
+    </div>
+
+    <div class="help-section">
+      <h3>3. Curseur « Cercles &gt; X NM » (minimum 2 NM)</h3>
+      <p>
+        Ce curseur masque uniquement les grands cercles NOTAM génériques dont le rayon dépasse <strong>X NM</strong>.
+        La valeur minimale est volontairement fixée à <strong>2 NM</strong> (jamais 0) afin d'éviter de masquer d'un seul coup
+        l'ensemble des cercles de NOTAM locaux.
+      </p>
+    </div>
+
+    <div class="help-section">
+      <h3>4. SUP AIP, liens officiels SIA et zones OpenAir</h3>
+      <p>
+        Les références <strong>SUP AIP</strong> disposent d'un lien direct vers le PDF officiel du SIA
+        (<code>lf_sup_YYYY_NNN_fr.pdf</code> ou <code>lf_sup_a_YYYY_NNN_fr.pdf</code> pour les SUP AIRAC).
+        Si une géométrie précise existe dans la base mensuelle <strong>OpenAir</strong> embarquée (par numéro de SUP AIP
+        ou numéro de NOTAM), la zone exacte est tracée en rouge et le grand cercle NOTAM d'origine passe en <strong>grisâtre</strong>.
+      </p>
+    </div>
+  </dialog>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+  </script>
+
+  <script src="./data/aerodromes-data.js"></script>
+  <script src="./data/supaip-openair-data.js"></script>
+  <script src="./js/sofia-core.js"></script>
+  <script src="./js/sofia-map.js"></script>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const core = window.PXA_SOFIA_CORE;
+      const mapMod = window.PXA_SOFIA_MAP;
+      const aerodromesCatalog = window.PXA_AERODROMES || window.AERODROMES_DATA || {};
+
+      const basemapSelect = document.getElementById("basemapSelect");
+      const mapCtrl = mapMod.createController("map", {
+        tileUrl: basemapSelect.value,
+        attribution: "© IGN Plan IGN v2"
+      });
+
+      let activeTileLayer = null;
+      function setBaseMap(url) {
+        if (activeTileLayer && mapCtrl.map.hasLayer(activeTileLayer)) {
+          mapCtrl.map.removeLayer(activeTileLayer);
+        }
+        activeTileLayer = L.tileLayer(url, {
+          maxZoom: 18,
+          attribution: "© IGN Plan IGN v2 / CartoDB / OpenTopoMap / OpenStreetMap"
+        }).addTo(mapCtrl.map);
+      }
+
+      mapCtrl.map.eachLayer((lyr) => {
+        if (lyr instanceof L.TileLayer) {
+          mapCtrl.map.removeLayer(lyr);
+        }
+      });
+      setBaseMap(basemapSelect.value);
+
+      basemapSelect.addEventListener("change", () => {
+        setBaseMap(basemapSelect.value);
+      });
+
+      const state = {
+        params: {
+          generatedAt: "—",
+          plannedDeparture: "—",
+          duration: "—",
+          flightRules: "VFR",
+          departure: "—",
+          destination: "—",
+          waypoints: [],
+          floorFl: 0,
+          ceilingFl: 60,
+          radiusNm: 15,
+          halfCorridorNm: 15
+        },
+        headers: [],
+        selectedHeaders: new Set(),
+        allNotams: [],
+        maxCircleRadiusNm: 50,
+        userComment: "",
+        pdfDoc: null,
+        pdfPageNum: 1,
+        pdfScale: 1.15
+      };
+
+      const pdfFileInput = document.getElementById("pdfFileInput");
+      const radiusSlider = document.getElementById("radiusSlider");
+      const radiusValueLabel = document.getElementById("radiusValueLabel");
+      const warningBanner = document.getElementById("warningBanner");
+      const warningText = document.getElementById("warningText");
+      const warningHelpLink = document.getElementById("warningHelpLink");
+      const pxadelSummaryBox = document.getElementById("pxadelSummaryBox");
+      const userCommentInput = document.getElementById("userCommentInput");
+      const btnCopySummary = document.getElementById("btnCopySummary");
+      const btnWhatsAppShare = document.getElementById("btnWhatsAppShare");
+      const copyFeedback = document.getElementById("copyFeedback");
+      const visibleCountLabel = document.getElementById("visibleCountLabel");
+      const totalCountLabel = document.getElementById("totalCountLabel");
+      const selectedHeadersBadge = document.getElementById("selectedHeadersBadge");
+      const notamListContainer = document.getElementById("notamListContainer");
+      const headersContainer = document.getElementById("headersContainer");
+      const reviewDialog = document.getElementById("reviewDialog");
+      const summaryDialog = document.getElementById("summaryDialog");
+      const helpDialog = document.getElementById("helpDialog");
+
+      const pdfPageInfo = document.getElementById("pdfPageInfo");
+      const pdfViewerEmpty = document.getElementById("pdfViewerEmpty");
+      const pdfCanvasWrap = document.getElementById("pdfCanvasWrap");
+      const pdfPreviewCanvas = document.getElementById("pdfPreviewCanvas");
+
+      function escapeRegExp(str) {
+        return String(str || "").replace(/[.*+?^${}()|[\]\\]/g, (ch) => "\\" + ch);
+      }
+
+      function escapeAttr(str) {
+        return String(str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function buildSiaSupAipUrl(year4, numStr, isAirac) {
+        const cleanNum = String(numStr || "").replace(/^0+/, "") || String(numStr || "");
+        const infix = isAirac ? "sup_a" : "sup";
+        return `https://www.sia.aviation-civile.gouv.fr/media/store/documents/file/l/f/lf_${infix}_${year4}_${cleanNum}_fr.pdf`;
+      }
+
+      function enrichSupAipLinksHtml(rawHtml, plainText) {
+        let html = String(rawHtml || "");
+        const sourceText = `${html} ${plainText || ""}`;
+        const regex = /SUP(?:\s+AIP)?(?:\s+AIRAC)?\s*(?:N°\s*|NO\.?\s*|#)?\s*(\d{1,4})\s*\/\s*(\d{2,4})/gi;
+        const seenUrls = new Set();
+        const foundLinks = [];
+
+        let m;
+        while ((m = regex.exec(sourceText)) !== null) {
+          const numRaw = m[1];
+          const yrRaw = m[2];
+          const year4 = yrRaw.length === 2 ? (Number(yrRaw) >= 80 ? `19${yrRaw}` : `20${yrRaw}`) : yrRaw;
+          const isAirac = /AIRAC/i.test(m[0]);
+          const url = buildSiaSupAipUrl(year4, numRaw, isAirac);
+          const label = `SUP AIP${isAirac ? " AIRAC" : ""} ${numRaw}/${year4}`;
+
+          if (!seenUrls.has(url)) {
+            seenUrls.add(url);
+            foundLinks.push({ url, label });
+          }
+
+          const escapedMatch = escapeRegExp(m[0]);
+          const matchRe = new RegExp(`(?<!["'>/])(${escapedMatch})(?![^<]*</a>)`, "g");
+          html = html.replace(
+            matchRe,
+            `<a class="sia-supaip-link" href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer">$1</a>`
+          );
+        }
+
+        if (foundLinks.length > 0 && !html.includes("sia-supaip-link")) {
+          const bar = foundLinks
+            .map(
+              (item) =>
+                `<a class="sia-supaip-link" href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">PDF SIA : ${escapeAttr(item.label)}</a>`
+            )
+            .join(" · ");
+          html = `${html}<div style="margin-top:6px;">${bar}</div>`;
+        }
+
+        return html;
+      }
+
+      function updateWarning(message) {
+        if (message) {
+          warningText.textContent = message + " ";
+          warningBanner.classList.add("visible");
+        } else {
+          warningText.textContent = "";
+          warningBanner.classList.remove("visible");
+        }
+      }
+
+      function fillReviewParams(p) {
+        document.getElementById("revGenAt").value = p.generatedAt || "—";
+        document.getElementById("revDepAt").value = p.plannedDeparture || "—";
+        document.getElementById("revDuration").value = p.duration || "—";
+        document.getElementById("revRules").value = p.flightRules || "—";
+        document.getElementById("revDeparture").value = p.departure || "—";
+        document.getElementById("revDestination").value = p.destination || "—";
+        document.getElementById("revWaypoints").value =
+          p.waypoints && p.waypoints.length ? p.waypoints.join(", ") : "Aucun";
+        document.getElementById("revFloorCeiling").value =
+          `FL ${p.floorFl ?? 0} → FL ${p.ceilingFl ?? 60}`;
+        document.getElementById("revRadiusCorridor").value =
+          `${p.radiusNm ?? 15} / ${p.halfCorridorNm ?? 15}`;
+      }
+
+      function updateSelectedHeadersBadge() {
+        selectedHeadersBadge.textContent = `${state.selectedHeaders.size} / ${state.headers.length} active(s)`;
+      }
+
+      function renderHeadersChecklist() {
+        headersContainer.innerHTML = "";
+        for (const h of state.headers) {
+          const label = document.createElement("label");
+          label.className = "header-option";
+
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = state.selectedHeaders.has(h);
+          cb.addEventListener("change", () => {
+            if (cb.checked) {
+              state.selectedHeaders.add(h);
+            } else {
+              state.selectedHeaders.delete(h);
+            }
+            refreshAllViews();
+          });
+
+          const span = document.createElement("span");
+          span.textContent = h;
+
+          label.appendChild(cb);
+          label.appendChild(span);
+          headersContainer.appendChild(label);
+        }
+        updateSelectedHeadersBadge();
+      }
+
+      function renderNotamCards(visibleNotams) {
+        visibleCountLabel.textContent = String(visibleNotams.length);
+        totalCountLabel.textContent = String(state.allNotams.length);
+
+        if (state.allNotams.length === 0) {
+          notamListContainer.innerHTML =
+            '<div style="color:#64748b;font-size:13px;">Chargez un PDF SOFIA Briefing pour afficher les NOTAM et le trajet.</div>';
+          return;
+        }
+
+        if (visibleNotams.length === 0) {
+          notamListContainer.innerHTML =
+            '<div style="color:#64748b;font-size:13px;">Aucun NOTAM pour les rubriques sélectionnées.</div>';
+          return;
+        }
+
+        notamListContainer.innerHTML = visibleNotams
+          .map((n) => {
+            const isRestriction = core
+              .normalizeHeaderKey(n.header)
+              .includes("RESTRICTIONS DE L'ESPACE AERIEN");
+            const rBadge =
+              typeof n.radiusNm === "number" ? `<span class="badge">${n.radiusNm} NM</span>` : "";
+            const oaBadge = n.hasOpenAir
+              ? `<span class="badge badge-openair">Tracé OpenAir (${n.openAirZones.length})</span>`
+              : "";
+            const bodyWithLinks = enrichSupAipLinksHtml(n.eHtml || n.eText || "", n.eText || "");
+            return `
+              <article class="notam-item ${isRestriction ? "is-restriction" : ""}">
+                <div class="notam-item-head">
+                  <span class="notam-id">${escapeAttr(n.id)}</span>
+                  ${rBadge}
+                  ${oaBadge}
+                  <span class="badge">${escapeAttr(n.header)}</span>
+                </div>
+                <div class="notam-body">${bodyWithLinks}</div>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      function refreshSummaryOnly() {
+        const filtered = core.filterBriefingItems({
+          notams: state.allNotams,
+          selectedHeaders: state.selectedHeaders
+        });
+        const summaryText = core.buildPxadelSummary(
+          state.params,
+          filtered.visibleNotams,
+          state.userComment
+        );
+        pxadelSummaryBox.value = summaryText;
+        btnWhatsAppShare.href = `https://wa.me/?text=${encodeURIComponent(summaryText)}`;
+      }
+
+      function refreshAllViews() {
+        updateSelectedHeadersBadge();
+
+        const filtered = core.filterBriefingItems({
+          notams: state.allNotams,
+          selectedHeaders: state.selectedHeaders
+        });
+
+        if (state.allNotams.length > 0 || state.params.departure !== "—") {
+          const routeStatus = mapCtrl.renderRoute(state.params, aerodromesCatalog);
+          updateWarning(routeStatus.ok ? "" : routeStatus.warningMessage);
+        } else {
+          updateWarning("");
+        }
+
+        mapCtrl.renderNotamsAndOpenAir(filtered.visibleNotams, {
+          maxCircleRadiusNm: state.maxCircleRadiusNm
+        });
+
+        renderNotamCards(filtered.visibleNotams);
+        refreshSummaryOnly();
+      }
+
+      async function renderPdfPage(pageNum) {
+        if (!state.pdfDoc) {
+          pdfViewerEmpty.style.display = "block";
+          pdfCanvasWrap.style.display = "none";
+          pdfPageInfo.textContent = "Page 0 / 0";
+          return;
+        }
+
+        const total = state.pdfDoc.numPages;
+        const targetPage = Math.max(1, Math.min(total, pageNum || 1));
+        state.pdfPageNum = targetPage;
+
+        pdfViewerEmpty.style.display = "none";
+        pdfCanvasWrap.style.display = "flex";
+        pdfPageInfo.textContent = `Page ${targetPage} / ${total}`;
+
+        const page = await state.pdfDoc.getPage(targetPage);
+        const viewport = page.getViewport({ scale: state.pdfScale });
+        const dpr = window.devicePixelRatio || 1;
+
+        pdfPreviewCanvas.width = Math.floor(viewport.width * dpr);
+        pdfPreviewCanvas.height = Math.floor(viewport.height * dpr);
+        pdfPreviewCanvas.style.width = `${Math.floor(viewport.width)}px`;
+        pdfPreviewCanvas.style.height = `${Math.floor(viewport.height)}px`;
+
+        const ctx = pdfPreviewCanvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        await page.render({ canvasContext: ctx, viewport }).promise;
+      }
+
+      pdfFileInput.addEventListener("change", async (ev) => {
+        const file = ev.target.files && ev.target.files[0];
+        if (!file) return;
+
+        try {
+          const rawBuffer = await file.arrayBuffer();
+          const bytesForText = new Uint8Array(rawBuffer).slice();
+          const bytesForPreview = new Uint8Array(rawBuffer).slice();
+          const fullText = await core.extractPdfText(bytesForText.buffer);
+
+          if (window.pdfjsLib) {
+            state.pdfDoc = await window.pdfjsLib.getDocument({ data: bytesForPreview }).promise;
+            state.pdfPageNum = 1;
+          }
+
+          state.params = core.parsePibParams(fullText);
+          const parsed = core.parseSofiaNotams(fullText);
+          state.headers = parsed.headers;
+          state.allNotams = parsed.notams;
+          state.selectedHeaders = core.getDefaultSelectedHeaders(state.headers);
+
+          fillReviewParams(state.params);
+          renderHeadersChecklist();
+          refreshAllViews();
+          setTimeout(() => mapCtrl.map.invalidateSize(), 60);
+        } catch (err) {
+          updateWarning(`Erreur lors de la lecture du PDF SOFIA : ${err.message}`);
+        }
+      });
+
+      radiusSlider.addEventListener("input", () => {
+        const val = Math.max(2, parseInt(radiusSlider.value, 10) || 2);
+        radiusSlider.value = String(val);
+        state.maxCircleRadiusNm = val;
+        radiusValueLabel.textContent = String(val);
+        refreshAllViews();
+      });
+
+      userCommentInput.addEventListener("input", () => {
+        state.userComment = userCommentInput.value;
+        refreshSummaryOnly();
+      });
+
+      btnCopySummary.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(pxadelSummaryBox.value);
+          copyFeedback.textContent = "Briefing copié dans le presse-papiers.";
+          setTimeout(() => {
+            copyFeedback.textContent = "";
+          }, 2500);
+        } catch {
+          pxadelSummaryBox.select();
+          document.execCommand("copy");
+          copyFeedback.textContent = "Briefing copié.";
+        }
+      });
+
+      document.getElementById("btnHeadersDefault").addEventListener("click", () => {
+        state.selectedHeaders = core.getDefaultSelectedHeaders(state.headers);
+        renderHeadersChecklist();
+        refreshAllViews();
+      });
+
+      document.getElementById("btnHeadersAll").addEventListener("click", () => {
+        state.selectedHeaders = new Set(state.headers);
+        renderHeadersChecklist();
+        refreshAllViews();
+      });
+
+      document.getElementById("btnHeadersNone").addEventListener("click", () => {
+        state.selectedHeaders = new Set();
+        renderHeadersChecklist();
+        refreshAllViews();
+      });
+
+      document.getElementById("btnOpenReview").addEventListener("click", async () => {
+        fillReviewParams(state.params);
+        reviewDialog.showModal();
+        await renderPdfPage(state.pdfPageNum || 1);
+      });
+      document.getElementById("btnCloseReview").addEventListener("click", () => reviewDialog.close());
+
+      document.getElementById("btnPdfPrev").addEventListener("click", async () => {
+        if (!state.pdfDoc || state.pdfPageNum <= 1) return;
+        await renderPdfPage(state.pdfPageNum - 1);
+      });
+      document.getElementById("btnPdfNext").addEventListener("click", async () => {
+        if (!state.pdfDoc || state.pdfPageNum >= state.pdfDoc.numPages) return;
+        await renderPdfPage(state.pdfPageNum + 1);
+      });
+      document.getElementById("btnPdfZoomOut").addEventListener("click", async () => {
+        state.pdfScale = Math.max(0.65, Number((state.pdfScale - 0.15).toFixed(2)));
+        await renderPdfPage(state.pdfPageNum);
+      });
+      document.getElementById("btnPdfZoomIn").addEventListener("click", async () => {
+        state.pdfScale = Math.min(2.2, Number((state.pdfScale + 0.15).toFixed(2)));
+        await renderPdfPage(state.pdfPageNum);
+      });
+
+      document.getElementById("btnOpenSummary").addEventListener("click", () => {
+        refreshSummaryOnly();
+        summaryDialog.showModal();
+      });
+      document.getElementById("btnCloseSummary").addEventListener("click", () => summaryDialog.close());
+
+      document.getElementById("btnOpenHelp").addEventListener("click", () => helpDialog.showModal());
+      warningHelpLink.addEventListener("click", () => helpDialog.showModal());
+      document.getElementById("btnCloseHelp").addEventListener("click", () => helpDialog.close());
+
+      window.addEventListener("resize", () => {
+        mapCtrl.map.invalidateSize();
+      });
+
+      state.headers = [
+        "RESTRICTIONS DE L'ESPACE AÉRIEN",
+        "ORGANISATION DE L'ESPACE AÉRIEN ET SERVICES DE LA CIRCULATION AÉRIENNE",
+        "ORGANISATION DE L'ESPACE AÉRIEN ET PROCÉDURES",
+        "ORGANISATION DE L'ESPACE AÉRIEN"
+      ];
+      state.selectedHeaders = core.getDefaultSelectedHeaders(state.headers);
+      renderHeadersChecklist();
+      fillReviewParams(state.params);
+      refreshSummaryOnly();
+    })();
+  </script>
+</body>
+</html>

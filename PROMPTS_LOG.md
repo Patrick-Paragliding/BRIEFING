@@ -12,6 +12,10 @@
 Curseur de rayon maximal : SPEC.md et TESTS_UX.md mentionnent une plage démarrant à 5 avec défaut à 10, alors que l'Écran 1 actuel fixe le plancher minimal à 2 NM (avec valeur par défaut à 50 NM et curseur jusqu'à 200 NM).   État d'avancement réel : SPEC.md et TESTS_UX.md décrivent encore l'ensemble des fonctionnalités (multi-fichiers PDF, renommage PXA-BRIEFING-YYYYMMDD-NN.pdf, Écran 2 de revue instrument, saisie OpenAir Adhoc, export .txt/.openair) comme un cahier des charges cible, alors que le 1er checkpoint porte sur une première base fonctionnelle centrée sur l'Écran 1 et le rattachement PXA_OPENAIR (bySup / byNotam / geoms).   Structure des fichiers : SPEC.md évoque Core.js / Theme.css / samples/..., tandis que l'Écran 1 actuel embarque son style et s'appuie sur aerodromes-data.js, supaip-openair-data.js, sofia-core.js et sofia-map.js.   
 7. Créer la moulintte d'embarquement
 8. 2 HTML pour Mobile - PC + Penser au CSS pour mobile
+9. le changement de couleur des cercles n'est pas actif
+10. Sélecteur d'entêtes en signet : placer l'outil de sélection des rubriques NOTAM dans un onglet/signet dédié (ou panneau latéral repliable) plutôt que dans la carte repliée au-dessus de la liste.
+11. 2e écran (Résumé Briefing / modale) : agrandir la fenêtre pour qu'elle occupe l'espace disponible et y intégrer l'aperçu visuel du PDF SOFIA (pdfPreviewCanvas) en plus du résumé texte.
+
 
 ### 2026-11-26 — Organisation de `samples/` (OpenAir) et règle AZBA (Écran 2)
 - **Décisions actées :**
