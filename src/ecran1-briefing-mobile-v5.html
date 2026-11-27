@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>PXA — Briefing du Matin v5</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #cbd5e1;
+      --primary: #1d4ed8;
+      --primary-light: #eff6ff;
+      --warn-bg: #fef2f2;
+      --warn-border: #ef4444;
+      --warn-text: #991b1b;
+      --ok-bg: #f0fdf4;
+      --ok-text: #166534;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    header.app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+
+    header.app-header h1 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .btn-help {
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .card-title {
+      margin: 0 0 8px 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .top-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .file-input-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .file-input-wrap label {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px dashed #94a3b8;
+      border-radius: 8px;
+      background: #f8fafc;
+      font-size: 14px;
+    }
+
+    .slider-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: #f8fafc;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .slider-badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+    }
+
+    .warning-banner {
+      display: none;
+      background: var(--warn-bg);
+      border: 1.5px solid var(--warn-border);
+      color: var(--warn-text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    .warning-banner.visible {
+      display: block;
+    }
+
+    .warning-banner a {
+      color: var(--warn-text);
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .map-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .map-toolbar label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .map-toolbar select {
+      padding: 5px 8px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    #map {
+      width: 100%;
+      height: 320px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      z-index: 1;
+    }
+
+    .map-legend {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    .pxadel-box {
+      width: 100%;
+      min-height: 135px;
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #f8fafc;
+      color: var(--text);
+      resize: vertical;
+    }
+
+    .comment-input {
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-whatsapp {
+      background: #16a34a;
+      color: #ffffff;
+    }
+
+    .copy-feedback {
+      font-size: 12px;
+      color: var(--ok-text);
+      font-weight: 600;
+      margin-top: 4px;
+      min-height: 16px;
+    }
+
+    .notam-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .notam-item {
+      border: 1px solid var(--border);
+      border-left: 4px solid #d97706;
+      border-radius: 8px;
+      padding: 9px 10px;
+      background: #ffffff;
+    }
+
+    .notam-item.is-restriction {
+      border-left-color: #dc2626;
+    }
+
+    .notam-item-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .notam-id {
+      font-weight: 700;
+      font-size: 14px;
+      color: #0f172a;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: #e2e8f0;
+      color: #334155;
+      font-weight: 600;
+    }
+
+    .badge-openair {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .notam-body {
+      font-size: 13px;
+      white-space: pre-line;
+      color: #1e293b;
+    }
+
+    .notam-body a {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    details.secondary-details summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    details.secondary-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.secondary-details summary::after {
+      content: "▸";
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    details.secondary-details[open] summary::after {
+      content: "▾";
+    }
+
+    .headers-toolbar {
+      display: flex;
+      gap: 8px;
+      margin: 10px 0 8px 0;
+    }
+
+    .btn-mini {
+      padding: 4px 10px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .headers-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .header-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .params-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .param-field {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .param-field label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .param-field input {
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #f8fafc;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    dialog#helpDialog {
+      max-width: 640px;
+      width: calc(100% - 20px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      background: #ffffff;
+      color: var(--text);
+    }
+
+    dialog#helpDialog::backdrop {
+      background: rgba(15, 23, 42, 0.55);
+    }
+
+    .help-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .help-header h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .help-section {
+      margin-bottom: 12px;
+      font-size: 13.5px;
+    }
+
+    .help-section h3 {
+      margin: 0 0 4px 0;
+      font-size: 14px;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="app-header">
+      <h1>PXA · Briefing du Matin</h1>
+      <button type="button" id="btnOpenHelp" class="btn-help">Aide</button>
+    </header>
+
+    <section class="card top-controls">
+      <div class="file-input-wrap">
+        <label for="pdfFileInput">Fichier PDF SOFIA Briefing (PIB TRAJET)</label>
+        <input type="file" id="pdfFileInput" accept="application/pdf,.pdf" />
+      </div>
+
+      <div class="slider-block">
+        <div class="slider-header">
+          <label for="radiusSlider">Masquer zones circulaires &gt; <span id="radiusValueLabel">50</span> NM</label>
+          <span class="slider-badge">Min : 2 NM</span>
+        </div>
+        <input type="range" id="radiusSlider" min="2" max="200" step="1" value="50" />
+      </div>
+    </section>
+
+    <div id="warningBanner" class="warning-banner" role="alert">
+      <strong>Attention :</strong> <span id="warningText"></span>
+      <a id="warningHelpLink">Comprendre l'impact (Aide)</a>
+    </div>
+
+    <section class="card">
+      <div class="map-toolbar">
+        <label for="basemapSelect">Fond de carte :</label>
+        <select id="basemapSelect">
+          <option value="https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}">IGN Plan IGN v2</option>
+          <option value="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png">CartoDB Positron (clair)</option>
+          <option value="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png">CartoDB Voyager</option>
+          <option value="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png">OpenTopoMap (relief)</option>
+          <option value="https://tile.openstreetmap.org/{z}/{x}/{y}.png">OpenStreetMap</option>
+        </select>
+      </div>
+      <div id="map"></div>
+      <div class="map-legend">
+        <span><span class="legend-dot" style="background:#2563eb;"></span>Couloir trajet</span>
+        <span><span class="legend-dot" style="background:#ef4444;"></span>Zone OpenAir (SUP AIP / NOTAM)</span>
+        <span><span class="legend-dot" style="background:#f59e0b;"></span>Cercle NOTAM Q)</span>
+        <span><span class="legend-dot" style="background:#94a3b8;"></span>Cercle Q) remplacé (grisé)</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Résumé Briefing PXADEL</h2>
+      <textarea id="pxadelSummaryBox" class="pxadel-box" readonly></textarea>
+      <input
+        type="text"
+        id="userCommentInput"
+        class="comment-input"
+        placeholder="Ajouter un commentaire libre au briefing (optionnel)..."
+      />
+      <div class="actions-row">
+        <button type="button" id="btnCopySummary" class="btn btn-primary">Copier le texte</button>
+        <a id="btnWhatsAppShare" class="btn btn-whatsapp" href="#" target="_blank" rel="noopener noreferrer">
+          WhatsApp
+        </a>
+      </div>
+      <div id="copyFeedback" class="copy-feedback"></div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">
+        <span>NOTAM affichés : <span id="visibleCountLabel">0</span> / <span id="totalCountLabel">0</span></span>
+      </h2>
+      <div id="notamListContainer" class="notam-list">
+        <div style="color:#64748b;font-size:13px;">
+          Chargez un PDF SOFIA Briefing pour afficher les NOTAM et le trajet.
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <details class="secondary-details">
+        <summary>Entêtes / rubriques SOFIA (4 présélectionnées par défaut)</summary>
+        <div class="headers-toolbar">
+          <button type="button" id="btnHeadersDefault" class="btn-mini">Défaut (4)</button>
+          <button type="button" id="btnHeadersAll" class="btn-mini">Tout</button>
+          <button type="button" id="btnHeadersNone" class="btn-mini">Aucun</button>
+        </div>
+        <div id="headersContainer" class="headers-grid"></div>
+      </details>
+    </section>
+
+    <section class="card">
+      <details class="secondary-details">
+        <summary>Paramètres PIB TRAJET (Lecture)</summary>
+        <div class="params-grid">
+          <div class="param-field">
+            <label>Heure génération fichier</label>
+            <input type="text" id="paramGenAt" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Heure planifiée de départ</label>
+            <input type="text" id="paramDepAt" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Durée (HHMM)</label>
+            <input type="text" id="paramDuration" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Règle de vol</label>
+            <input type="text" id="paramRules" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Départ (OACI)</label>
+            <input type="text" id="paramDeparture" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Destination (OACI)</label>
+            <input type="text" id="paramDestination" readonly value="—" />
+          </div>
+          <div class="param-field" style="grid-column: span 2;">
+            <label>Points tournants / contournement (OACI)</label>
+            <input type="text" id="paramWaypoints" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Plancher (FL)</label>
+            <input type="text" id="paramFloor" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Plafond sélectionné (FL)</label>
+            <input type="text" id="paramCeiling" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Rayon (NM)</label>
+            <input type="text" id="paramRadius" readonly value="—" />
+          </div>
+          <div class="param-field">
+            <label>Demi-couloir (NM)</label>
+            <input type="text" id="paramHalfCorridor" readonly value="—" />
+          </div>
+        </div>
+      </details>
+    </section>
+  </div>
+
+  <dialog id="helpDialog">
+    <div class="help-header">
+      <h2>Aide — PXA Briefing du Matin</h2>
+      <button type="button" id="btnCloseHelp" class="btn-mini">Fermer</button>
+    </div>
+
+    <div class="help-section">
+      <h3>1. Convention codes OACI et contrôle strict</h3>
+      <p>
+        Par convention, saisissez des <strong>codes OACI aérodromes</strong> dans SOFIA Briefing
+        (Départ, Arrivée et points tournants). L'application vérifie que <strong>tous</strong> les aérodromes du trajet
+        sont présents dans la base embarquée. Si un seul code est introuvable, un bandeau <strong>Warning</strong> s'affiche
+        et <strong>aucun tracé</strong> n'est dessiné sur la carte afin d'éviter toute représentation erronée du couloir.
+      </p>
+    </div>
+
+    <div class="help-section">
+      <h3>2. Filtrage amont SOFIA Briefing &amp; Entêtes</h3>
+      <p>
+        Le tri par date et créneau horaire relève exclusivement de <strong>SOFIA Briefing</strong>.
+        Par défaut, 4 rubriques sont cochées : <em>RESTRICTIONS DE L'ESPACE AÉRIEN</em> et les 3 rubriques contenant
+        <em>ORGANISATION DE L'ESPACE</em>.
+      </p>
+    </div>
+
+    <div class="help-section">
+      <h3>3. Curseur « Masquer zones circulaires &gt; X NM » (minimum 2 NM)</h3>
+      <p>
+        Ce curseur masque uniquement les grands cercles NOTAM génériques dont le rayon dépasse <strong>X NM</strong>.
+        La valeur minimale est volontairement fixée à <strong>2 NM</strong> (jamais 0) afin d'éviter de masquer d'un seul coup
+        l'ensemble des cercles de NOTAM locaux.
+      </p>
+    </div>
+
+    <div class="help-section">
+      <h3>4. SUP AIP, liens officiels SIA et zones OpenAir</h3>
+      <p>
+        Les références <strong>SUP AIP</strong> disposent d'un lien direct vers le PDF officiel du SIA.
+        Si une géométrie précise existe dans la base mensuelle <strong>OpenAir</strong> embarquée (par numéro de SUP AIP
+        ou numéro de NOTAM), la zone exacte est tracée en rouge et le grand cercle NOTAM d'origine passe en <strong>grisâtre</strong>.
+      </p>
+    </div>
+  </dialog>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+  </script>
+
+<script src="./data/aerodromes-data.js"></script>
+<script src="./js/supaip-openair-data.js"></script>
+<script src="./js/sofia-core.js"></script>
+<script src="./js/sofia-map.js"></script>
+<script src="./js/ton_5e_fichier.js"></script>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const core = window.PXA_SOFIA_CORE;
+      const mapMod = window.PXA_SOFIA_MAP;
+      const aerodromesCatalog = window.PXA_AERODROMES || window.AERODROMES_DATA || {};
+
+      const basemapSelect = document.getElementById("basemapSelect");
+      const mapCtrl = mapMod.createController("map", {
+        tileUrl: basemapSelect.value,
+        attribution: "© IGN Plan IGN v2"
+      });
+
+      let activeTileLayer = null;
+      function setBaseMap(url) {
+        if (activeTileLayer && mapCtrl.map.hasLayer(activeTileLayer)) {
+          mapCtrl.map.removeLayer(activeTileLayer);
+        }
+        activeTileLayer = L.tileLayer(url, {
+          maxZoom: 18,
+          attribution: "© IGN Plan IGN v2 / CartoDB / OpenTopoMap / OpenStreetMap"
+        }).addTo(mapCtrl.map);
+      }
+
+      mapCtrl.map.eachLayer((lyr) => {
+        if (lyr instanceof L.TileLayer) {
+          mapCtrl.map.removeLayer(lyr);
+        }
+      });
+      setBaseMap(basemapSelect.value);
+
+      basemapSelect.addEventListener("change", () => {
+        setBaseMap(basemapSelect.value);
+      });
+
+      const state = {
+        params: {
+          generatedAt: "—",
+          plannedDeparture: "—",
+          duration: "—",
+          flightRules: "VFR",
+          departure: "—",
+          destination: "—",
+          waypoints: [],
+          floorFl: 0,
+          ceilingFl: 60,
+          radiusNm: 15,
+          halfCorridorNm: 15
+        },
+        headers: [],
+        selectedHeaders: new Set(),
+        allNotams: [],
+        maxCircleRadiusNm: 50,
+        userComment: ""
+      };
+
+      const pdfFileInput = document.getElementById("pdfFileInput");
+      const radiusSlider = document.getElementById("radiusSlider");
+      const radiusValueLabel = document.getElementById("radiusValueLabel");
+      const warningBanner = document.getElementById("warningBanner");
+      const warningText = document.getElementById("warningText");
+      const warningHelpLink = document.getElementById("warningHelpLink");
+      const pxadelSummaryBox = document.getElementById("pxadelSummaryBox");
+      const userCommentInput = document.getElementById("userCommentInput");
+      const btnCopySummary = document.getElementById("btnCopySummary");
+      const btnWhatsAppShare = document.getElementById("btnWhatsAppShare");
+      const copyFeedback = document.getElementById("copyFeedback");
+      const visibleCountLabel = document.getElementById("visibleCountLabel");
+      const totalCountLabel = document.getElementById("totalCountLabel");
+      const notamListContainer = document.getElementById("notamListContainer");
+      const headersContainer = document.getElementById("headersContainer");
+      const helpDialog = document.getElementById("helpDialog");
+
+      function updateWarning(message) {
+        if (message) {
+          warningText.textContent = message + " ";
+          warningBanner.classList.add("visible");
+        } else {
+          warningText.textContent = "";
+          warningBanner.classList.remove("visible");
+        }
+      }
+
+      function fillParamsReadOnly(p) {
+        document.getElementById("paramGenAt").value = p.generatedAt || "—";
+        document.getElementById("paramDepAt").value = p.plannedDeparture || "—";
+        document.getElementById("paramDuration").value = p.duration || "—";
+        document.getElementById("paramRules").value = p.flightRules || "—";
+        document.getElementById("paramDeparture").value = p.departure || "—";
+        document.getElementById("paramDestination").value = p.destination || "—";
+        document.getElementById("paramWaypoints").value =
+          p.waypoints && p.waypoints.length ? p.waypoints.join(", ") : "Aucun";
+        document.getElementById("paramFloor").value = String(p.floorFl ?? 0);
+        document.getElementById("paramCeiling").value = String(p.ceilingFl ?? 60);
+        document.getElementById("paramRadius").value = String(p.radiusNm ?? 15);
+        document.getElementById("paramHalfCorridor").value = String(p.halfCorridorNm ?? 15);
+      }
+
+      function renderHeadersChecklist() {
+        headersContainer.innerHTML = "";
+        for (const h of state.headers) {
+          const label = document.createElement("label");
+          label.className = "header-option";
+
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = state.selectedHeaders.has(h);
+          cb.addEventListener("change", () => {
+            if (cb.checked) {
+              state.selectedHeaders.add(h);
+            } else {
+              state.selectedHeaders.delete(h);
+            }
+            refreshAllViews();
+          });
+
+          const span = document.createElement("span");
+          span.textContent = h;
+
+          label.appendChild(cb);
+          label.appendChild(span);
+          headersContainer.appendChild(label);
+        }
+      }
+
+      function renderNotamCards(visibleNotams) {
+        visibleCountLabel.textContent = String(visibleNotams.length);
+        totalCountLabel.textContent = String(state.allNotams.length);
+
+        if (state.allNotams.length === 0) {
+          notamListContainer.innerHTML =
+            '<div style="color:#64748b;font-size:13px;">Chargez un PDF SOFIA Briefing pour afficher les NOTAM et le trajet.</div>';
+          return;
+        }
+
+        if (visibleNotams.length === 0) {
+          notamListContainer.innerHTML =
+            '<div style="color:#64748b;font-size:13px;">Aucun NOTAM pour les rubriques sélectionnées.</div>';
+          return;
+        }
+
+        notamListContainer.innerHTML = visibleNotams
+          .map((n) => {
+            const isRestriction = core
+              .normalizeHeaderKey(n.header)
+              .includes("RESTRICTIONS DE L'ESPACE AERIEN");
+            const rBadge =
+              typeof n.radiusNm === "number" ? `<span class="badge">${n.radiusNm} NM</span>` : "";
+            const oaBadge = n.hasOpenAir
+              ? `<span class="badge badge-openair">Tracé OpenAir (${n.openAirZones.length})</span>`
+              : "";
+            return `
+              <article class="notam-item ${isRestriction ? "is-restriction" : ""}">
+                <div class="notam-item-head">
+                  <span class="notam-id">${n.id}</span>
+                  ${rBadge}
+                  ${oaBadge}
+                  <span class="badge">${n.header}</span>
+                </div>
+                <div class="notam-body">${n.eHtml}</div>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      function refreshSummaryOnly() {
+        const filtered = core.filterBriefingItems({
+          notams: state.allNotams,
+          selectedHeaders: state.selectedHeaders
+        });
+        const summaryText = core.buildPxadelSummary(
+          state.params,
+          filtered.visibleNotams,
+          state.userComment
+        );
+        pxadelSummaryBox.value = summaryText;
+        btnWhatsAppShare.href = `https://wa.me/?text=${encodeURIComponent(summaryText)}`;
+      }
+
+      function refreshAllViews() {
+        const filtered = core.filterBriefingItems({
+          notams: state.allNotams,
+          selectedHeaders: state.selectedHeaders
+        });
+
+        if (state.allNotams.length > 0 || state.params.departure !== "—") {
+          const routeStatus = mapCtrl.renderRoute(state.params, aerodromesCatalog);
+          updateWarning(routeStatus.ok ? "" : routeStatus.warningMessage);
+        } else {
+          updateWarning("");
+        }
+
+        mapCtrl.renderNotamsAndOpenAir(filtered.visibleNotams, {
+          maxCircleRadiusNm: state.maxCircleRadiusNm
+        });
+
+        renderNotamCards(filtered.visibleNotams);
+        refreshSummaryOnly();
+      }
+
+      pdfFileInput.addEventListener("change", async (ev) => {
+        const file = ev.target.files && ev.target.files[0];
+        if (!file) return;
+
+        try {
+          const buffer = await file.arrayBuffer();
+          const fullText = await core.extractPdfText(buffer);
+
+          state.params = core.parsePibParams(fullText);
+          const parsed = core.parseSofiaNotams(fullText);
+          state.headers = parsed.headers;
+          state.allNotams = parsed.notams;
+          state.selectedHeaders = core.getDefaultSelectedHeaders(state.headers);
+
+          fillParamsReadOnly(state.params);
+          renderHeadersChecklist();
+          refreshAllViews();
+        } catch (err) {
+          updateWarning(`Erreur lors de la lecture du PDF SOFIA : ${err.message}`);
+        }
+      });
+
+      radiusSlider.addEventListener("input", () => {
+        const val = Math.max(2, parseInt(radiusSlider.value, 10) || 2);
+        radiusSlider.value = String(val);
+        state.maxCircleRadiusNm = val;
+        radiusValueLabel.textContent = String(val);
+        refreshAllViews();
+      });
+
+      userCommentInput.addEventListener("input", () => {
+        state.userComment = userCommentInput.value;
+        refreshSummaryOnly();
+      });
+
+      btnCopySummary.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(pxadelSummaryBox.value);
+          copyFeedback.textContent = "Briefing PXADEL copié dans le presse-papiers.";
+          setTimeout(() => {
+            copyFeedback.textContent = "";
+          }, 2500);
+        } catch {
+          pxadelSummaryBox.select();
+          document.execCommand("copy");
+          copyFeedback.textContent = "Briefing PXADEL copié.";
+        }
+      });
+
+      document.getElementById("btnHeadersDefault").addEventListener("click", () => {
+        state.selectedHeaders = core.getDefaultSelectedHeaders(state.headers);
+        renderHeadersChecklist();
+        refreshAllViews();
+      });
+
+      document.getElementById("btnHeadersAll").addEventListener("click", () => {
+        state.selectedHeaders = new Set(state.headers);
+        renderHeadersChecklist();
+        refreshAllViews();
+      });
+
+      document.getElementById("btnHeadersNone").addEventListener("click", () => {
+        state.selectedHeaders = new Set();
+        renderHeadersChecklist();
+        refreshAllViews();
+      });
+
+      document.getElementById("btnOpenHelp").addEventListener("click", () => helpDialog.showModal());
+      warningHelpLink.addEventListener("click", () => helpDialog.showModal());
+      document.getElementById("btnCloseHelp").addEventListener("click", () => helpDialog.close());
+
+      state.headers = [
+        "RESTRICTIONS DE L'ESPACE AÉRIEN",
+        "ORGANISATION DE L'ESPACE AÉRIEN ET SERVICES DE LA CIRCULATION AÉRIENNE",
+        "ORGANISATION DE L'ESPACE AÉRIEN ET PROCÉDURES",
+        "ORGANISATION DE L'ESPACE AÉRIEN"
+      ];
+      state.selectedHeaders = core.getDefaultSelectedHeaders(state.headers);
+      renderHeadersChecklist();
+      refreshSummaryOnly();
+    })();
+  </script>
+</body>
+</html>
